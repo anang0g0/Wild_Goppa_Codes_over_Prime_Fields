@@ -15,6 +15,8 @@
 #include "chash-p.c"
 
 #define SEPARABLE 0
+#define MATRIX_SIZE 16
+#define SHM_KEY 8191*128
 
 // extern int mlt(int x, int y);
 // extern int mltn(int n, int x);
@@ -678,45 +680,71 @@ vec ogcd(vec xx, vec yy)
     //  return yy;
 }
 
-
 // 行列の逆行列を計算する関数
-void inverseMatrix2(short A[M][M], short A_inv[M][M])
-{
+vec inverseMatrix(MTX A, MTX A_inv,int start_row,int end_row) {
     int i, j, k;
     short temp;
-    MTX X = {0};
 
     // 単位行列を初期化
-    for (i = 0; i < M; i++)
-    {
-        for (j = 0; j < M; j++)
-        {
-            A_inv[i][j] = (i == j) ? 1 : 0;
+    for (i = 0; i < K/2; i++) {
+        for (j = 0; j < K/2+1; j++) {
+            A_inv.x[i][j] = (i == j) ? 1 : 0;
         }
     }
 
     // ガウス・ジョルダン法による逆行列の計算
-    for (k = 0; k < M; k++)
-    {
-        temp = oinv(A[k][k], N);
-        for (j = 0; j < M; j++)
-        {
-            A[k][j] = A[k][j] * temp % N;
-            A_inv[k][j] = A_inv[k][j] * (temp) % N;
+    for (k = start_row; k < end_row; k++) {
+        temp = A.x[k][k];
+        for (j = 0; j < K/2+1; j++) {
+            A.x[k][j] = A.x[k][j]*oinv(temp,N);
+            A_inv.x[k][j] = A_inv.x[k][j]*oinv(temp,N)%N;
         }
-        for (i = 0; i < M; i++)
-        {
-            if (i != k)
-            {
-                temp = A[i][k];
-                for (j = 0; j < M; j++)
-                {
-                    A[i][j] = (A[i][j] + (A[k][j] * temp % N)) % N;
-                    A_inv[i][j] = (A_inv[i][j] + A_inv[k][j] * temp % N) % N;
+        for (i = start_row; i < end_row; i++) {
+            if (i != k) {
+                temp = A.x[i][k];
+                for (j = 0; j < K/2+1; j++) {
+                    A.x[i][j] -= (A.x[k][j] * temp)%N;
+                    A_inv.x[i][j] -= (A_inv.x[k][j] * temp)%N;
                 }
             }
         }
     }
+    vec x = {0};
+    for (i = 0; i < K/2; i++)
+    {
+        if (N > A.x[i][K / 2])
+        {
+            x.x[K / 2 - i] = (N - A.x[i][K / 2]) % N;
+        }
+        else
+        {
+            x.x[K / 2 - i] = A.x[i][K / 2] % N;
+        }
+    }
+
+    x.x[0] = 1;
+
+    vec vv = {0};
+    OP pol = {0};
+    pol = setpol(x.x, K / 2 + 1);
+    printpol(o2v(pol));
+    printf(" ==key\n");
+    for (i = 0; i < N; i++)
+    {
+        // v.x[i] = 0;
+        if (trace(pol, i) % N == 0)
+        {
+            printf("error position=%d\n", i);
+            vv.x[i] = i + 1;
+        }
+    }
+    for(i=0;i<K/2;i++){
+        for(j=0;j<K/2+1;j++)
+        printf("%d,",A.x[i][j]);
+        printf("\n");
+    }
+return vv;
+//exit(1);
 }
 
 // #define NN 16
@@ -755,21 +783,8 @@ vec sol(MTX a)
             }
         }
     }
-    for (i = 0; i < K / 2; i++)
-    {
-        for (j = 0; j < K / 2 + 1; j++)
-            printf("@%d,", a.x[i][j]);
-        printf("\n");
-        if (a.x[i][i] != 1)
-        {
-            for (j = 0; j < K / 2 + 1; j++)
-                printf("a%d,", a.x[i][j]);
-            printf("\n");
-        }
-    }
-    printf("\n");
     vec x = {0};
-    for (i = 0; i < K / 2; i++)
+    for (i = 0; i < K/2; i++)
     {
         if (N > a.x[i][K / 2])
         {
@@ -779,7 +794,6 @@ vec sol(MTX a)
         {
             x.x[K / 2 - i] = a.x[i][K / 2] % N;
         }
-        // x.x[i+1] = N-a.x[i][K / 2];
     }
 
     x.x[0] = 1;
@@ -909,7 +923,7 @@ int ben_or(vec f)
     return 0;
 }
 
-vec mkd(OP w, int kk)
+vec mkd(OP w, int kk,int start,int end)
 {
     int i, j, k, l, ii = 0;
 
@@ -950,7 +964,7 @@ aa:
     // exit(1);
 
     // 多項式の値が0でないことを確認
-    for (int i = 0; i < N; i++)
+    for (int i = start; i < end; i++)
     {
         ta[i] = trace(w, i);
         if (ta[i] == 0)
@@ -961,7 +975,7 @@ aa:
             goto aa;
         }
     }
-    for (int i = 0; i < N; i++)
+    for (int i = start; i < end; i++)
     {
         tr[i] = oinv(ta[i], N);
         // printf("%d,", tr[i]);
@@ -989,15 +1003,15 @@ aa:
     // keygen(g);
     // exit(1);
 
-    for (int i = 0; i < M; i++)
+    for (int j = start; j < end; j++)
     {
-        for (int j = 0; j < K; j++)
+        for (int i = 0; i < M; i++)
         {
             ma[i][j] = (vb[j][i] * tr[i]) % N;
         }
     }
 
-    for (int i = 0; i < K; i++)
+    for (int i = start; i < end; i++)
     {
         for (int j = 0; j < M; j++)
         {
@@ -1283,6 +1297,20 @@ ymo bm_itr(unsigned short s[])
     }
 }
 
+// 行列の掛け算関数
+void matrix_multiply(short A[MATRIX_SIZE][MATRIX_SIZE], short B[MATRIX_SIZE][MATRIX_SIZE], short *C, int start_row, int end_row) {
+    for (int i = start_row; i < end_row; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            short sum = 0.0;
+            for (int k = 0; k < MATRIX_SIZE; k++) {
+                sum += A[i][k] * B[k][j];
+            }
+            C[i*MATRIX_SIZE+j] = sum;
+        }
+    }
+}
+
+
 int main()
 {
     int i;
@@ -1295,8 +1323,11 @@ int main()
     srand(clock());
     // mkg(K); // Goppa Code (EEA type)
     // van(K); // RS-Code generate
-    mkd(f, K);
+    //mkd(f, K);
     // vv(K);           // Goppa Code's Parity Check (Berlekamp type)
+
+    mkd(f,K,0,K);    
+
 
     while (1)
     {
@@ -1322,6 +1353,7 @@ int main()
             v.x[K - 1 - i] = x.x[i];
         printpol(v);
         printf(" ==synpol\n");
+        //exit(1);
 
         for (i = 0; i < K / 2; i++)
         {
@@ -1340,12 +1372,18 @@ int main()
             printf("\n");
         }
         // exit(1);
-        /*
- // マルチプロセスで行列掛け算を並列化
-    int num_processes = 1;
+    /*
+    // マルチプロセスで行列掛け算を並列化
+    int num_processes = 8;
     int rows_per_process = 8 / num_processes;
 
+    int shmid = shmget(SHM_KEY, sizeof(short) * K * N, IPC_CREAT | 0666);
+    if (shmid == -1) {
+        perror("shmget");
+        exit(1);
+    }
 
+    MTX bb={0};
     // 各プロセスで一部の行を計算
     for (int i = 0; i < num_processes; i++) {
         pid_t pid = fork();
@@ -1353,9 +1391,9 @@ int main()
         if (pid == 0) {
             int start_row = i * rows_per_process;
             int end_row = (i + 1) * rows_per_process;
-            sol(b,x,start_row,end_row);
-            //matrix_multiply(AA, A_inv, shared_C, start_row, end_row);
-
+            
+            x=inverseMatrix(b,bb,start_row,end_row);
+      
             // 結果を表示
             printf("Process %d: Rows %d to %d completed\n", i, start_row, end_row);
 
@@ -1371,6 +1409,8 @@ int main()
         int status;
         wait(&status);
     }
+    //exit(1);
+    // 結果を表示
     */
         x = sol(b);
         for (i = 0; i < N; i++)
@@ -1392,8 +1432,9 @@ int main()
             }
         }
         if (flg == T)
-            exit(1);
+            break;
         // printf("\n");
+        break;
     }
     return 0;
 }
