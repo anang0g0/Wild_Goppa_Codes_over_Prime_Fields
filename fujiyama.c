@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <math.h>
+#include <x86intrin.h> // SIMD命令を使用するためのヘッダファイル
 
 #include "global-p.h"
 #include "struct.h"
@@ -671,68 +678,6 @@ vec ogcd(vec xx, vec yy)
     //  return yy;
 }
 
-// #define NN 16
-vec renritu(MTX a)
-{
-    unsigned short p, d;
-    int i, j, k;
-    vec v = {0};
-
-    for (i = 0; i < K; i++)
-    {
-        p = a.x[i][i];
-
-        for (j = 0; j < (K + 1); j++)
-        {
-            a.x[i][j] = (a.x[i][j] * oinv(p, N)) % N;
-        }
-
-        for (j = 0; j < K; j++)
-        {
-            if (i != j)
-            {
-                d = a.x[j][i];
-
-                for (k = i; k < (K + 1); k++)
-                {
-                    a.x[j][k] = (a.x[j][k] + d * a.x[i][k]) % N;
-                }
-            }
-        }
-    }
-    for (i = 0; i < K; i++)
-    {
-        if (a.x[i][i] != 1)
-        {
-            for (j = 0; j < K + 1; j++)
-                printf("a%d,", a.x[i][j]);
-            printf("\n");
-            exit(1);
-        }
-    }
-    printf("\n");
-    vec x = {0};
-    for (i = 0; i < K; i++)
-    {
-        v.x[i] = a.x[i][K];
-        // v.x[128]=1;
-        printf(" x%d = %d\n", i, v.x[i]);
-        x.x[i + 1] = v.x[i];
-    }
-    x.x[0] = 1;
-
-    OP pol = {0};
-    pol = setpol(x.x, K + 1);
-    printpol(o2v(pol));
-    printf(" ==key\n");
-    for (i = 0; i < N; i++)
-    {
-        if (trace(pol, i) % N == 0)
-            printf("uz%d i=%d\n", i, i);
-    }
-
-    return v;
-}
 
 // 行列の逆行列を計算する関数
 void inverseMatrix2(short A[M][M], short A_inv[M][M])
@@ -781,7 +726,7 @@ vec sol(MTX a)
     int i, j, k;
     vec v = {0};
 
-    for (i = 0; i < K / 2; i++)
+    for (i = 0; i < K/2; i++)
     {
         p = a.x[i][i];
 
@@ -1352,6 +1297,7 @@ int main()
     // van(K); // RS-Code generate
     mkd(f, K);
     // vv(K);           // Goppa Code's Parity Check (Berlekamp type)
+
     while (1)
     {
         // for(i=0;i<T;i++)
@@ -1394,6 +1340,38 @@ int main()
             printf("\n");
         }
         // exit(1);
+        /*
+ // マルチプロセスで行列掛け算を並列化
+    int num_processes = 1;
+    int rows_per_process = 8 / num_processes;
+
+
+    // 各プロセスで一部の行を計算
+    for (int i = 0; i < num_processes; i++) {
+        pid_t pid = fork();
+
+        if (pid == 0) {
+            int start_row = i * rows_per_process;
+            int end_row = (i + 1) * rows_per_process;
+            sol(b,x,start_row,end_row);
+            //matrix_multiply(AA, A_inv, shared_C, start_row, end_row);
+
+            // 結果を表示
+            printf("Process %d: Rows %d to %d completed\n", i, start_row, end_row);
+
+            exit(0);
+        } else if (pid < 0) {
+            perror("fork");
+            exit(1);
+        }
+    }
+
+    // 親プロセスが子プロセスの終了を待つ
+    for (int i = 0; i < num_processes; i++) {
+        int status;
+        wait(&status);
+    }
+    */
         x = sol(b);
         for (i = 0; i < N; i++)
         {
