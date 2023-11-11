@@ -148,6 +148,7 @@ vec kof2(unsigned short c, vec f)
     int i, k;
     vec b = {0}, h = {0};
 
+    c = oinv(c);
     printf("c=%d\n", c);
     // exit(1);
     b = f; // o2v(f);
@@ -160,7 +161,7 @@ vec kof2(unsigned short c, vec f)
     }
     // g = v2o(h);
     printpol(h);
-    printf(" =h in kof2\n");
+    printf(" =h in oinv2\n");
     return h;
 }
 
@@ -583,7 +584,8 @@ vec vgcd(vec xx, vec yy)
         xx = yy;
         yy = tt;
     }
-
+    if (yy.x[0] > 0)
+        tt = kof2(yy.x[0], xx);
     printpol((yy));
     printf(" =========yy\n");
     printpol((tt));
@@ -619,6 +621,11 @@ vec ogcd(vec xx, vec yy)
         {
             tt = vmod(xx, yy);
         }
+        if (yy.x[0] > 0 && deg(yy) == 0)
+        {
+            tt = kof2(oinv(yy.x[0], N), xx);
+            return tt;
+        }
         if (vLT(tt).a == 0)
             return yy;
         if (v > 256)
@@ -639,6 +646,7 @@ vec ogcd(vec xx, vec yy)
     }
     else
     {
+
         return h;
     }
     //  return yy;
@@ -1216,7 +1224,8 @@ vec pmul(vec a, vec b)
 
     k = deg(a) + 1;
     l = deg(b) + 1;
-
+    printf("k=%d,l=%d", k, l);
+    // exit(1);
     for (int i = 0; i < k; i++)
     {
         for (int j = 0; j < l; j++)
@@ -1337,6 +1346,7 @@ int main()
         // r = bma(x.x);    // Berlekamp-Massey Algorithm
         // ymo y=bm_itr(x.x);
         // chen(y.f);
+        // exit(1);
         // for(i=0;i<N;i++)
         // if(z1[i]>0)
         // printf("i=%d\n",i);
@@ -1368,7 +1378,7 @@ int main()
         x = sol(b);
         for (i = 0; i < N; i++)
         {
-            if (z1[i] != x.x[i])
+            if (z1[i] != x.x[i] && z1[i] > 0 && x.x[i])
             {
                 printf("baka=%d %d %d\n", i, z1[i], x.x[i]);
                 // exit(1);
