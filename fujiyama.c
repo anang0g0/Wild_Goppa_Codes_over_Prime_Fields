@@ -148,7 +148,7 @@ vec kof2(unsigned short c, vec f)
     int i, k;
     vec b = {0}, h = {0};
 
-    c = oinv(c);
+    c = oinv(c,N);
     printf("c=%d\n", c);
     // exit(1);
     b = f; // o2v(f);
@@ -394,6 +394,25 @@ oterm vLT(vec f)
     }
 
     return t;
+}
+
+short inv(short a,short n)
+{
+  short d = n;
+  short x = 0;
+  short s = 1;
+  while (a != 0){
+    short q = d / a;
+    short r = d % a;
+    d = a;
+    a = r;
+    short t = x - q * s;
+    x = s;
+    s = t;
+  }
+  short gcd = d; // $\gcd(a, n)$ 
+
+  return ((x + n) % (n / d));
 }
 
 // aに何をかけたらbになるか
