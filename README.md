@@ -1,1 +1,15 @@
-# Goppa Code Decorder by Peterson Algorithm over Prime Fields# Wild_Goppa_Codes_over_Prime_Fields
+# Goppa Code Decorder by Peterson Algorithm over Prime Fields
+gcc -O3 fujitama.c
+
+# 20231111
+とりあえず面倒なこと一切抜きにして、一番単純な答えがこれだろうと思って公開しました。  
+素体上で動かすとどういう訳か早いです。
+
+拡大体を扱うための議論が必要なくなるというのは結構楽です。
+今後この符号の性能や、高速な復号手順を調べていきたいと思います。
+
+実装にあたり、ピーターソン復号法は以下の参考文献を見ました。
+ほかの復号法も攻略できるかも。
+
+
+参考文献：代数系と符号理論（オーム社）
