@@ -428,7 +428,10 @@ short inv(short a,short n)
 unsigned short
 equ(unsigned short a, unsigned short b)
 {
-    return (oinv(a, N) * b);
+    //for(short i=0;i<N;i++)
+    //if(i*a%N==b)
+    //return i;
+    return (inv(a, N) * b)%N;
 }
 
 // 多項式を単行式で割る
@@ -456,7 +459,7 @@ oterm vLTdiv(vec f, oterm t)
     }
     else if (t.n == 0 && t.a > 0)
     {
-        s.a = (tt.a * oinv(t.a, N)) % N;
+        s.a = (tt.a * inv(t.a, N)) % N;
         s.n = tt.n;
     }
 
@@ -584,6 +587,22 @@ vec opow(vec f, int n)
     return g;
 }
 
+vec vpowmod(vec f, vec mod, int n) {
+    vec v={0};
+    vec ret={0};
+
+     v.x[0]= 1;
+    ret=(v);
+    while (n > 0) {
+        if (n%2 == 1) ret = vmod(vmul(ret , f),mod) ;  // n の最下位bitが 1 ならば x^(2^i) をかける
+        f = vmod(vmul(f , f),mod);
+        n >>= 1;  // n を1bit 左にずらす
+    }
+    return ret;
+}
+
+
+
 int cnty = 0;
 vec vpp(vec f, vec mod, int n)
 {
@@ -623,6 +642,64 @@ vec vgcd(vec xx, vec yy)
 }
 
 // gcd
+vec ogcd2(vec xx, vec yy)
+{
+    vec tt = {0}, tmp, h = {0};
+    // ee.x[K] = 1;
+
+    h.x[0] = 1;
+    // h.x[0] = 0;
+    if (deg((xx)) < deg((yy)))
+    {
+        tmp = xx;
+        xx = yy;
+        yy = tmp;
+    }
+    // tt = vmod(xx, yy);
+    tt = vmod(xx, yy);
+    int v = 0;
+    while (deg(tt) > 0)
+    {
+        // printf("Oh!\n");
+        v++;
+        xx = yy;
+        yy = tt;
+        if (deg(yy) > 0)
+        {
+            tt = vmod(xx, yy);
+        }
+        //if (yy.x[0] > 0 && deg(yy) == 0)
+        {
+        //    tt = kof2(oinv(yy.x[0], N), xx);
+        //    return tt;
+        }
+        if (vLT(tt).a == 0)
+            return yy;
+        if (v > 256)
+        {
+            printsage(xx);
+            printf(" ==xx\n");
+            printsage(yy);
+            printf(" ==yy\n");
+            printsage(tt);
+            printf(" ==tt\n");
+            // exit(1);
+            return tt;
+        }
+    }
+    if (vLT(yy).a == 0)
+    {
+        return tt;
+    }
+    else
+    {
+
+        return h;
+    }
+    //  return yy;
+}
+
+// gcd
 vec ogcd(vec xx, vec yy)
 {
     vec tt = {0}, tmp, h = {0};
@@ -649,11 +726,6 @@ vec ogcd(vec xx, vec yy)
         {
             tt = vmod(xx, yy);
         }
-        if (yy.x[0] > 0 && deg(yy) == 0)
-        {
-            tt = kof2(oinv(yy.x[0], N), xx);
-            return tt;
-        }
         if (vLT(tt).a == 0)
             return yy;
         if (v > 256)
@@ -674,7 +746,6 @@ vec ogcd(vec xx, vec yy)
     }
     else
     {
-
         return h;
     }
     //  return yy;
@@ -748,19 +819,19 @@ return vv;
 }
 
 // #define NN 16
-vec sol(MTX a)
+vec sol(MTX a,int start,int end)
 {
     unsigned int p, d;
     int i, j, k;
     vec v = {0};
 
-    for (i = 0; i < K/2; i++)
+    for (i = start; i < end; i++)
     {
         p = a.x[i][i];
 
         for (j = 0; j < (K / 2 + 1); j++)
         {
-            a.x[i][j] = (a.x[i][j] * oinv(p, N)) % N;
+            a.x[i][j] = (a.x[i][j] * inv(p, N)) % N;
         }
 
         for (j = 0; j < K / 2; j++)
@@ -784,7 +855,7 @@ vec sol(MTX a)
         }
     }
     vec x = {0};
-    for (i = 0; i < K/2; i++)
+    for (i = start; i < end; i++)
     {
         if (N > a.x[i][K / 2])
         {
@@ -888,7 +959,7 @@ int ben_or(vec f)
         // printf(" --p\n");
 
         memset(r.x, 0, sizeof(r.x));
-        v = vpp(v, f, N);
+        v = vpowmod(v, f, N);
         // v=opowmod(v,f,N);
         r = v;
         // r.x[l]=1;
@@ -946,11 +1017,11 @@ aa:
     // irreducible gvecpa code (既役多項式が必要なら、ここのコメントを外すこと。)
 
     w = mkpol();
-    // l=ben_or(o2v(w));
-    // while(l== -1) goto aa;
+     l=ben_or(o2v(w));
+     while(l== -1) goto aa;
     printsage(o2v(w));
     printf("\n");
-    // exit(1);
+     exit(1);
     //     printf("wwwwwww\n");
     //  exit(1);
     //  separable gvecpa code
@@ -977,7 +1048,7 @@ aa:
     }
     for (int i = start; i < end; i++)
     {
-        tr[i] = oinv(ta[i], N);
+        tr[i] = inv(ta[i], N);
         // printf("%d,", tr[i]);
     }
     memset(g, 0, sizeof(g));
@@ -1087,7 +1158,7 @@ aa:
 
     for (i = 0; i < N; i++)
     {
-        tr[i] = oinv(ta[i], N);
+        tr[i] = inv(ta[i], N);
         // printf("%d,", tr[i]);
     }
 
@@ -1371,48 +1442,8 @@ int main()
                 printf("e%d,", b.x[i][j]);
             printf("\n");
         }
-        // exit(1);
-    /*
-    // マルチプロセスで行列掛け算を並列化
-    int num_processes = 8;
-    int rows_per_process = 8 / num_processes;
-
-    int shmid = shmget(SHM_KEY, sizeof(short) * K * N, IPC_CREAT | 0666);
-    if (shmid == -1) {
-        perror("shmget");
-        exit(1);
-    }
-
-    MTX bb={0};
-    // 各プロセスで一部の行を計算
-    for (int i = 0; i < num_processes; i++) {
-        pid_t pid = fork();
-
-        if (pid == 0) {
-            int start_row = i * rows_per_process;
-            int end_row = (i + 1) * rows_per_process;
-            
-            x=inverseMatrix(b,bb,start_row,end_row);
-      
-            // 結果を表示
-            printf("Process %d: Rows %d to %d completed\n", i, start_row, end_row);
-
-            exit(0);
-        } else if (pid < 0) {
-            perror("fork");
-            exit(1);
-        }
-    }
-
-    // 親プロセスが子プロセスの終了を待つ
-    for (int i = 0; i < num_processes; i++) {
-        int status;
-        wait(&status);
-    }
-    //exit(1);
-    // 結果を表示
-    */
-        x = sol(b);
+    
+        x = sol(b,0,K/2);
         for (i = 0; i < N; i++)
         {
             if (z1[i] != x.x[i] && z1[i] > 0 && x.x[i])
