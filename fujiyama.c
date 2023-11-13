@@ -16,11 +16,8 @@
 
 #define SEPARABLE 0
 #define MATRIX_SIZE 16
-#define SHM_KEY 8191*128
+#define SHM_KEY 128
 
-// extern int mlt(int x, int y);
-// extern int mltn(int n, int x);
-unsigned short ww[K/2+1]={0};
 unsigned short g[K + 1] = {0};
 
 // ランダム多項式の生成
