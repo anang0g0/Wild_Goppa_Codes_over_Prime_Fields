@@ -1069,7 +1069,7 @@ aa:
      while(l== -1) goto aa;
     printsage(o2v(w));
     printf("\n");
-     exit(1);
+    // exit(1);
     //     printf("wwwwwww\n");
     //  exit(1);
     //  separable gvecpa code

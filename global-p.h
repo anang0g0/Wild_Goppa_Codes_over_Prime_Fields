@@ -10,7 +10,7 @@
 #define M N //有限体の元の数
 #define K (128) //符号の次元
 #define E (13)    //拡大体のビット数
-#define DEG 3100 //(K * E)
+#define DEG N //(K * E)
 #define T (K / 2) //エラーの数
 
 
