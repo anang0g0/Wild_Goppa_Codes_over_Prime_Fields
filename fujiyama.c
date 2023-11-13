@@ -20,7 +20,7 @@
 
 // extern int mlt(int x, int y);
 // extern int mltn(int n, int x);
-
+unsigned short ww[K/2+1]={0};
 unsigned short g[K + 1] = {0};
 
 // ランダム多項式の生成
@@ -429,8 +429,11 @@ unsigned short
 equ(unsigned short a, unsigned short b)
 {
     //for(short i=0;i<N;i++)
-    //if(i*a%N==b)
-    //return i;
+    if(b==0)
+    return 0;
+    if(a==1)
+    return b;
+
     return (inv(a, N) * b)%N;
 }
 
@@ -601,7 +604,156 @@ vec vpowmod(vec f, vec mod, int n) {
     return ret;
 }
 
+// gcd
+vec ogcd(vec xx, vec yy)
+{
+    vec tt = {0}, tmp, h = {0};
+    // ee.x[K] = 1;
 
+    h.x[0] = 1;
+    // h.x[0] = 0;
+    if (deg((xx)) < deg((yy)))
+    {
+        tmp = xx;
+        xx = yy;
+        yy = tmp;
+    }
+    // tt = vmod(xx, yy);
+    tt = vmod(xx, yy);
+    while (deg(tt) > 0)
+    {
+        // printf("Oh!\n");
+        xx = yy;
+        yy = tt;
+        if (deg(yy) > 0)
+        {
+            tt = vmod(xx, yy);
+        }
+        if (vLT(tt).a == 0)
+            return yy;
+    }
+    if (vLT(yy).a == 0)
+    {
+        return tt;
+    }
+    else
+    {
+        return h;
+    }
+    //  return yy;
+}
+
+
+short diag(MTX a,int n){
+    return (a.x[n][n]*a.x[n+1][n+1]-a.x[n][n+1]*a.x[n+1][n])%N;
+}
+
+int resl(vec f,vec g){
+    MTX a={0};
+    short dia[N]={0};
+    /*
+    f.x[0]=16;
+    f.x[1]=0;
+    f.x[2]=4;
+    f.x[3]=4;
+    f.x[4]=1;
+    g.x[0]=8;
+    g.x[1]=9;
+    g.x[2]=10;
+    g.x[3]=9;
+    printf("\n");
+    */
+    int n=deg(f),m=deg(g);
+    if(n<m){
+    for(int i=0;i<n+1;i++){
+        for(int j=0;j<m+1;j++){
+        a.x[i+j][i]=f.x[n-j];
+        }
+    }
+    for(int i=0;i<n+m;i++){
+        for(int j=0;j<n+m;j++){
+        a.x[j+i][i+m]=g.x[m-j];
+        }
+    }
+    }
+    if(n>=m){
+    for(int i=0;i<m+1;i++){
+        for(int j=0;j<n+1;j++){
+        a.x[i+j][i]=f.x[n-j];
+        }
+    }
+    for(int i=0;i<n+m+1;i++){
+        for(int j=0;j<n+m+1;j++){
+        a.x[j+i][i+m]=g.x[m-j];
+        }
+    }        
+    }
+    /*
+    for(int i=0;i<n+m;i++){
+        for(int j=0;j<m+n;j++)
+        printf("%d,",a.x[i][j]);
+        printf("\n");
+    }
+    printf("\n");
+    */
+    short tmp[N]={0};
+    int i,j,k,t;
+    for(i=0;i<m+n-1;i++){
+
+            for(k=i;k<m+n-1;k++){ //m+n
+            //printf("%d ",k);
+            t=a.x[k+1][i];
+            for(int j=i;j<n+m;j++)
+            {
+            tmp[j]=a.x[k+1][j]-(a.x[i][j]*equ(a.x[i][i],a.x[k+1][i]))%N;
+            //printf("i=%d (j=%d k+1=%d) n=%d ks=%d %d %d t=%d =%d\n",i,j,k+1,a.x[k+1][j],(a.x[i][j]*equ(a.x[i][i],a.x[k+1][i]))%N,a.x[k][j],(a.x[i][j]),t,(N+tmp[j])%N);
+            }
+            //printf("\n");
+            for(int j=0;j<n+m;j++){
+            a.x[k+1][j]=tmp[j];
+            if(a.x[k+1][j]<0)
+            a.x[k+1][j]=N+a.x[k+1][j];
+            }
+            /*
+            for(int u=0;u<n+m;u++){
+                for(int v=0;v<n+m;v++)
+                printf("%d ",a.x[u][v]);
+                printf("\n");
+            }
+            printf(" %d %d %d\n",k,m+n,i);
+            */
+        }
+        dia[i]=a.x[i][i];
+    }
+    
+    int y=diag(a,n+m-2);
+
+    for(i=0;i<m+n-2;i++){
+    y=(y*dia[i])%N;
+    if(dia[i]==0)
+    return 0;
+    }
+    printf("y=%d\n",y);
+    //exit(1);
+    /*
+    vec c=ogcd(f,g);
+    if((deg(c)>0 && y>0)){ //} || (deg(c)==0 && y==0)){
+    printsage(c);
+    printf(" ==baka\n");
+    printsage(f);
+    printf(" ==f\n");
+    printsage(g);
+    printf(" ==g\n");
+    exit(1);
+    }
+    */
+    if(y>0)
+    return 0;
+    if(y==0)
+    return -1;
+
+    return 0;
+}
 
 int cnty = 0;
 vec vpp(vec f, vec mod, int n)
@@ -641,115 +793,6 @@ vec vgcd(vec xx, vec yy)
     return tt;
 }
 
-// gcd
-vec ogcd2(vec xx, vec yy)
-{
-    vec tt = {0}, tmp, h = {0};
-    // ee.x[K] = 1;
-
-    h.x[0] = 1;
-    // h.x[0] = 0;
-    if (deg((xx)) < deg((yy)))
-    {
-        tmp = xx;
-        xx = yy;
-        yy = tmp;
-    }
-    // tt = vmod(xx, yy);
-    tt = vmod(xx, yy);
-    int v = 0;
-    while (deg(tt) > 0)
-    {
-        // printf("Oh!\n");
-        v++;
-        xx = yy;
-        yy = tt;
-        if (deg(yy) > 0)
-        {
-            tt = vmod(xx, yy);
-        }
-        //if (yy.x[0] > 0 && deg(yy) == 0)
-        {
-        //    tt = kof2(oinv(yy.x[0], N), xx);
-        //    return tt;
-        }
-        if (vLT(tt).a == 0)
-            return yy;
-        if (v > 256)
-        {
-            printsage(xx);
-            printf(" ==xx\n");
-            printsage(yy);
-            printf(" ==yy\n");
-            printsage(tt);
-            printf(" ==tt\n");
-            // exit(1);
-            return tt;
-        }
-    }
-    if (vLT(yy).a == 0)
-    {
-        return tt;
-    }
-    else
-    {
-
-        return h;
-    }
-    //  return yy;
-}
-
-// gcd
-vec ogcd(vec xx, vec yy)
-{
-    vec tt = {0}, tmp, h = {0};
-    // ee.x[K] = 1;
-
-    h.x[0] = 1;
-    // h.x[0] = 0;
-    if (deg((xx)) < deg((yy)))
-    {
-        tmp = xx;
-        xx = yy;
-        yy = tmp;
-    }
-    // tt = vmod(xx, yy);
-    tt = vmod(xx, yy);
-    int v = 0;
-    while (deg(tt) > 0)
-    {
-        // printf("Oh!\n");
-        v++;
-        xx = yy;
-        yy = tt;
-        if (deg(yy) > 0)
-        {
-            tt = vmod(xx, yy);
-        }
-        if (vLT(tt).a == 0)
-            return yy;
-        if (v > 256)
-        {
-            printsage(xx);
-            printf(" ==xx\n");
-            printsage(yy);
-            printf(" ==yy\n");
-            printsage(tt);
-            printf(" ==tt\n");
-            // exit(1);
-            return tt;
-        }
-    }
-    if (vLT(yy).a == 0)
-    {
-        return tt;
-    }
-    else
-    {
-        return h;
-    }
-    //  return yy;
-}
 
 // 行列の逆行列を計算する関数
 vec inverseMatrix(MTX A, MTX A_inv,int start_row,int end_row) {
@@ -923,76 +966,81 @@ int is_equ(vec a, vec b)
     return 0;
 }
 
+
 // GF(2^m) then set m in this function.
 int ben_or(vec f)
 {
-    int n; //, pid;
+  int n; //, pid;
 
-    vec s = {0}, u = {0}, r = {0};
-    vec v = {0}; //, ff=o2v(f);
-    // if GF(8192) is 2^m and m==13 or if GF(4096) and m==12 if GF(16384) is testing
-    // int m = E;
-    //  m=12 as a for GF(4096)=2^12 defined @ gloal.h or here,for example m=4 and GF(16)
+  vec s = {0}, u = {0}, r = {0};
+  vec v = {0}; //, ff=o2v(f);
+  // if GF(8192) is 2^m and m==13 or if GF(4096) and m==12 if GF(16384) is testing
+  // int m = E;
+  //  m=12 as a for GF(4096)=2^12 defined @ gloal.h or here,for example m=4 and GF(16)
 
-    v.x[1] = 1;
-    s = (v);
-    // for (int i = 0; i < K / 2; i++)
-    r = s;
-    n = deg((f));
+  v.x[1] = 1;
+  s = (v);
+  // for (int i = 0; i < K / 2; i++)
+  r = s;
+  n = deg((f));
 
-    if (vLT(f).n == 0)
-    {
-        printf("f==0\n");
-        exit(1);
-    }
-    if (n == 0)
+  if (vLT(f).n == 0)
+  {
+    printf("f==0\n");
+    exit(1);
+  }
+  if (n == 0)
+    return -1;
+
+  // r(x)^{q^i} square pow mod
+  for (int i = 0; i < K / 2; i++)
+  {
+    printf(":i=%d", i);
+    // irreducible over GH(8192) 2^13
+    // if(r.x[0]==65535)
+    // return -1;
+    //printsage(r);
+    //printf(" --p\n");
+
+    memset(r.x,0,sizeof(r.x));
+    v=vpowmod(v,f,N);
+    //v=opowmod(v,f,N);
+    r=v;
+    //r.x[l]=1;
+
+    u = vsub(r, (s));
+    u = vmod(u, f);
+
+    if(deg(u)>0){
+    //printsage(u);
+    //printf(" you\n");
+    //printsage(f);
+    printf(" me\n");
+    u = ogcd(f, u);
+    //int le=resl(f,u);
+    //if(le==0 && deg(u)==0){
+    //    printf("baka^^\n");
+    //exit(1);
+    //return -1;
+    //}
+    printf("you\n");
+    }else{
         return -1;
-
-    // r(x)^{q^i} square pow mod
-    for (int i = 0; i < K / 2; i++)
-    {
-        printf(":i=%d", i);
-        // irreducible over GH(8192) 2^13
-        // if(r.x[0]==65535)
-        // return -1;
-        // printsage(r);
-        // printf(" --p\n");
-
-        memset(r.x, 0, sizeof(r.x));
-        v = vpowmod(v, f, N);
-        // v=opowmod(v,f,N);
-        r = v;
-        // r.x[l]=1;
-
-        u = vsub(r, (s));
-        u = vmod(u, f);
-
-        if (deg(u) > 0)
-        {
-            // printsage(u);
-            // printf(" you\n");
-            // printsage(f);
-            printf(" me\n");
-            u = ogcd(f, u);
-            printf("you\n");
-        }
-        else
-        {
-            return -1;
-        }
-        if (deg(u) > 0) //  || vLT(u).a > 0)
-        {
-            // if(fequ(u,f)==1)
-            {
-                // flg[i]= -1;
-                printf("ae\n");
-                return -1;
-            }
-        }
     }
+    if (deg(u) > 0) //  || vLT(u).a > 0)
+    {
+    //if(fequ(u,f)==1)
+    {
+      // flg[i]= -1;
+      printf("ae\n");
+      return -1;
+      }
+    }
+  }
 
-    return 0;
+  return 0;
 }
+
 
 vec mkd(OP w, int kk,int start,int end)
 {
@@ -1390,12 +1438,21 @@ int main()
     OP f = {0};
 
     printf("%d %d %d\n", 3, oinv(3, N), 3 * oinv(3, N) % N);
+    int le=1;
+    for(i=1;i<65;i++){
+    for(int j=0;j<13;j++)
+    le=(13*le)%128;
+    printf("le=%d %d\n",le,i);
+    }
     // exit(1);
     srand(clock());
     // mkg(K); // Goppa Code (EEA type)
     // van(K); // RS-Code generate
     //mkd(f, K);
     // vv(K);           // Goppa Code's Parity Check (Berlekamp type)
+
+    //resl(v,x);
+    //exit(1);
 
     mkd(f,K,0,K);    
 
