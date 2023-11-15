@@ -86,7 +86,6 @@ OP v2o(vec a)
     return f;
 }
 
-//逆数計算（ループ）
 unsigned short oinv(unsigned short a, unsigned short n)
 {
     unsigned short i;
@@ -150,7 +149,6 @@ void printpol(vec a)
     return;
 }
 
-//係数をかける
 vec kof2(unsigned short c, vec f)
 {
     int i, k;
@@ -173,7 +171,6 @@ vec kof2(unsigned short c, vec f)
     return h;
 }
 
-//多項式の足し算
 vec vadd(vec a, vec b)
 {
     int i;
@@ -187,7 +184,6 @@ vec vadd(vec a, vec b)
     return c;
 }
 
-//左シフト
 vec lsft(vec a)
 {
     vec b = {0};
@@ -202,7 +198,6 @@ vec lsft(vec a)
     return b;
 }
 
-// 右シフト
 vec rsft(vec a)
 {
     vec b = {0};
@@ -215,7 +210,7 @@ vec rsft(vec a)
     return b;
 }
 
-//多項式の掛け算
+int mul = 0, mul2 = 0;
 vec vmul(vec a, vec b)
 {
     int i, j, k, l;
@@ -224,8 +219,8 @@ vec vmul(vec a, vec b)
     k = deg(a);
     l = deg(b);
 
-    i = 0;
-    while (i < k + 1)
+    i=0;
+    while(i<k+1)
     {
         for (j = 0; j < l + 1; j++)
         {
@@ -238,10 +233,10 @@ vec vmul(vec a, vec b)
     return c;
 }
 
+
 unsigned short vb[K * 2][N] = {0};
 unsigned short gt[K * 2][K * 2] = {0};
 
-//RS-Code generate
 void van(int kk)
 {
     int i, j;
@@ -268,8 +263,7 @@ void van(int kk)
     }
 }
 
-//Goppa多項式からおまけを生成
-void ogt(unsigned short pp[], int kk)
+void ogt(int kk)
 {
     int i, j;
 
@@ -291,9 +285,9 @@ void ogt(unsigned short pp[], int kk)
 }
 
 // 配列の値を係数として多項式に設定する
-OP setpol(unsigned short f[], int n)
+vec setpol(unsigned short f[], int n)
 {
-    OP g;
+    vec g;
     vec v = {0};
     int i;
 
@@ -302,16 +296,15 @@ OP setpol(unsigned short f[], int n)
         v.x[n - 1 - i] = f[i];
     }
 
-    g = v2o(v);
+    g = (v);
 
     return g;
 }
 
-// 多項式型の多項式を生成
-OP mkpol()
+vec mkpol()
 {
     int i, j, k, flg, ii = 0;
-    OP w = {0};
+    vec w = {0};
 
     do
     {
@@ -322,7 +315,7 @@ OP mkpol()
         // l = 0;
         memset(g, 0, sizeof(g));
         // memset(ta, 0, sizeof(ta));
-        memset(w.t, 0, sizeof(w));
+        memset(w.x, 0, sizeof(w));
         ginit();
         ii++;
         if (ii > 100)
@@ -352,7 +345,7 @@ OP mkpol()
 
     } while (j == 0);
 
-    printpol(o2v(w));
+    printpol((w));
     printf(" ==g\n");
     // exit(1);
 
@@ -379,7 +372,6 @@ v2a(oterm a)
     return 0;
 }
 
-//sage形式で多項式を表示
 void printsage(vec a)
 {
     int i, j;
@@ -400,10 +392,10 @@ void printsage(vec a)
 
 // 多項式の代入値
 unsigned short
-trace(OP f, unsigned short x)
+trace(vec f, unsigned short x)
 {
     unsigned short u = 0;
-    vec v = o2v(f);
+    vec v = (f);
     int d = deg((v)) + 1;
 
     for (int i = 0; i < d; i++)
@@ -435,7 +427,6 @@ oterm vLT(vec f)
     return t;
 }
 
-//逆数計算
 short inv(short a, short n)
 {
     short d = n;
@@ -562,6 +553,8 @@ vec vmod(vec f, vec g)
 
     b = vLT(g);
 
+    // printpol(f);
+    // printf(" ==f\n");
     while (1)
     {
         // printf("@\n");
@@ -581,8 +574,45 @@ vec vmod(vec f, vec g)
     return f;
 }
 
+// int mul = 0, mul2 = 0;
+vec vmul_2(vec a, vec b)
+{
+    int i, j, k, l;
+    vec c = {0};
+    if (deg(a) > 128 && deg(b) > 128)
+        mul++;
+    mul2++;
 
-// 多項式のべき乗余
+    k = deg(a);
+    l = deg(b);
+
+    for (i = 0; i < k + 1; i++)
+    {
+        for (j = 0; j < l + 1; j++)
+        // if (a.x[i] > 0)
+        {
+            c.x[i + j] += (a.x[i] * b.x[j]) % N;
+            c.x[i + j] %= N;
+        }
+    }
+
+    return c;
+}
+
+// 多項式のべき乗
+vec opow(vec f, int n)
+{
+    // int i;
+    vec g = {0};
+
+    g = f;
+
+    for (int i = 1; i < n; i++)
+        g = vmul(g, f);
+
+    return g;
+}
+
 vec vpowmod(vec f, vec mod, int n)
 {
     vec v = {0};
@@ -628,10 +658,6 @@ vec ogcd(vec xx, vec yy)
         if (vLT(tt).a == 0)
             return yy;
     }
-    if(vLT(yy).a>0 && deg(xx)>0){
-    yy=vmod(xx,yy);
-    return yy
-    }
     if (vLT(yy).a == 0)
     {
         return tt;
@@ -643,13 +669,11 @@ vec ogcd(vec xx, vec yy)
     //  return yy;
 }
 
-//行列式
 short diag(MTX a, int n)
 {
     return (a.x[n][n] * a.x[n + 1][n + 1] - a.x[n][n + 1] * a.x[n + 1][n]) % N;
 }
 
-//終結式（未完成）
 int resl(vec f, vec g)
 {
     MTX a = {0};
@@ -751,13 +775,63 @@ int resl(vec f, vec g)
             return 0;
     }
     printf("y=%d\n", y);
-
+    // exit(1);
+    /*
+    vec c=ogcd(f,g);
+    if((deg(c)>0 && y>0)){ //} || (deg(c)==0 && y==0)){
+    printsage(c);
+    printf(" ==baka\n");
+    printsage(f);
+    printf(" ==f\n");
+    printsage(g);
+    printf(" ==g\n");
+    exit(1);
+    }
+    */
     if (y > 0)
         return 0;
     if (y == 0)
         return -1;
 
     return 0;
+}
+
+int cnty = 0;
+vec vpp(vec f, vec mod, int n)
+{
+    int i;
+    vec s = {0};
+    // t = f;
+    s = f;
+    printf("@\n");
+    // 繰り返し２乗法
+    for (i = 1; i < n; i++)
+    {
+        s = vmod(vmul_2(s, f), mod);
+    }
+
+    return s;
+}
+
+// GCD for decode
+vec vgcd(vec xx, vec yy)
+{
+    vec tt;
+
+    while (deg(yy) > 0)
+    {
+        tt = vmod(xx, yy);
+        xx = yy;
+        yy = tt;
+    }
+    if (yy.x[0] > 0)
+        tt = kof2(yy.x[0], xx);
+    printpol((yy));
+    printf(" =========yy\n");
+    printpol((tt));
+    printf(" =========tt\n");
+
+    return tt;
 }
 
 // 行列の逆行列を計算する関数
@@ -813,9 +887,9 @@ vec inverseMatrix(MTX A, MTX A_inv, int start_row, int end_row)
     x.x[0] = 1;
 
     vec vv = {0};
-    OP pol = {0};
+    vec pol = {0};
     pol = setpol(x.x, K / 2 + 1);
-    printpol(o2v(pol));
+    printpol((pol));
     printf(" ==key\n");
     for (i = 0; i < N; i++)
     {
@@ -836,7 +910,7 @@ vec inverseMatrix(MTX A, MTX A_inv, int start_row, int end_row)
     // exit(1);
 }
 
-// シンドロームからエラーの位置を決定する
+// #define NN 16
 vec sol(MTX a, int start, int end)
 {
     unsigned int p, d;
@@ -888,9 +962,9 @@ vec sol(MTX a, int start, int end)
     x.x[0] = 1;
 
     vec vv = {0};
-    OP pol = {0};
+    vec pol = {0};
     pol = setpol(x.x, K / 2 + 1);
-    printpol(o2v(pol));
+    printpol((pol));
     printf(" ==key\n");
     for (i = 0; i < N; i++)
     {
@@ -905,7 +979,33 @@ vec sol(MTX a, int start, int end)
     return vv;
 }
 
-//when 2 polynomial is equal ?
+// 多項式のべき乗余
+vec opowmod(vec f, vec mod, int n)
+{
+    // int i, j = 0;
+    vec g = f;
+    printsage(mod);
+    printf(" ma\n");
+    // 繰り返し２乗法
+    for (int i = 1; i < n; i++)
+    {
+        // f = vmul(f, f);
+        g = vmul(g, f);
+        if (deg(g) > deg(mod))
+        {
+            // printsage(g);
+            // printf(" tadaima!\n");
+            g = vmod(g, mod);
+            // printsage(g);
+            // printf(" tadaima2!\n");
+        }
+    }
+    printsage(g);
+    printf(" ==ge!\n");
+    // exit(1);
+    return g;
+}
+
 int is_equ(vec a, vec b)
 {
     for (int i = 0; i < N * N; i++)
@@ -915,7 +1015,7 @@ int is_equ(vec a, vec b)
     return 0;
 }
 
-// irreduciblity test polynomial over GF(p) 
+// GF(2^m) then set m in this function.
 int ben_or(vec f)
 {
     int n; //, pid;
@@ -944,7 +1044,11 @@ int ben_or(vec f)
     for (int i = 0; i < K / 2; i++)
     {
         printf(":i=%d", i);
-        // irreducible over GF(p). p is any prime.
+        // irreducible over GH(8192) 2^13
+        // if(r.x[0]==65535)
+        // return -1;
+        // printsage(r);
+        // printf(" --p\n");
 
         memset(r.x, 0, sizeof(r.x));
         v = vpowmod(v, f, N);
@@ -987,8 +1091,7 @@ int ben_or(vec f)
     return 0;
 }
 
-//パリティ検査行列の生成
-vec mkd(OP w, int kk, int start, int end)
+vec mkd(vec w, int kk, int start, int end)
 {
     int i, j, k, l, ii = 0;
 
@@ -1011,17 +1114,17 @@ aa:
     // irreducible gvecpa code (既役多項式が必要なら、ここのコメントを外すこと。)
 
     w = mkpol();
-    l = ben_or(o2v(w));
+    l = ben_or((w));
     while (l == -1)
         goto aa;
-    printsage(o2v(w));
+    printsage((w));
     printf("\n");
-    // exit(1);
-    //      printf("wwwwwww\n");
-    //   exit(1);
-    //   separable gvecpa code
-    //   w = mkpol();
-    r = o2v(w);
+    //exit(1);
+    //     printf("wwwwwww\n");
+    //  exit(1);
+    //  separable gvecpa code
+    //  w = mkpol();
+    r = (w);
     //  r=vmul(w,w);
     memset(ta, 0, sizeof(ta));
     // w = setpol(g, K + 1);
@@ -1059,7 +1162,7 @@ aa:
     //  v=rev(w);
     van(kk);
     //  v=(w);
-    ogt(r.x, kk);
+    ogt(kk);
     // exit(1);
     //  wait();
 
@@ -1090,14 +1193,35 @@ aa:
         printf("\n");
     }
 
+    /*
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = 0; j < kk; j++)
+            {
+                mat[j][i] = vb[j][i];
+            }
+        }
+    */
+    // printf("\n");
+    // exit(1);
+    /*
+    for( int j = 0; j < N; j++)
+    {
+        for( int i= 0; i < kk; i++)
+            printf("%d,", mat[j][i]);
+        printf("\n");
+    }
+    //exit(1);
+    //wait();
+*/
 
-    return o2v(w);
+    return (w);
 }
 
 void vv(int kk)
 {
     int i, j;
-    OP r = mkpol();
+    vec r = mkpol();
     unsigned short tr[N];
     unsigned short ta[N] = {0};
 
@@ -1155,7 +1279,6 @@ aa:
     }
 }
 
-//ランダムエラー生成
 void mkerr(unsigned short *z1, int num)
 {
     int j, l;
@@ -1170,19 +1293,18 @@ void mkerr(unsigned short *z1, int num)
         // printf ("l=%d\n", l);
         if (0 == z1[l] && l > 0)
         {
-            z1[l] = 517;
+            z1[l] = 2;
             // printf("l=%d\n", l);
             j++;
         }
     }
 }
 
-//シンドロームの計算
-OP synd(unsigned short zz[], int kk)
+vec synd(unsigned short zz[], int kk)
 {
     unsigned short syn[K] = {0}, s = 0;
     int i, j;
-    OP f = {0};
+    vec f = {0};
 
     printf("in synd2\n");
 
@@ -1201,8 +1323,8 @@ OP synd(unsigned short zz[], int kk)
     // printf ("\n");
 
     f = setpol(syn, kk);
-    printpol(o2v(f));
-    printf(" =========syn\n");
+    printpol((f));
+    printf(" syn=============\n");
     //  exit(1);
 
     return f;
@@ -1242,7 +1364,6 @@ typedef struct
     vec h;
 } ymo;
 
-// buggy
 vec pmul(vec a, vec b)
 {
     int i, j, k, l;
@@ -1275,6 +1396,76 @@ vec pmul(vec a, vec b)
     return c;
 }
 
+ymo bm_itr(unsigned short s[])
+{
+    vec U1[2][2] = {0}, U2[2][2][2] = {0}, null = {0};
+    int i, j, k;
+    ymo t = {0};
+
+    U2[0][0][0].x[0] = 1;       // f[0];
+    U2[0][0][1].x[0] = 0;       // fai[0];
+    U2[0][1][0].x[0] = 0;       // g[0];
+    U2[0][1][1].x[0] = N - (1); // thi[0];
+    int m = 0, d = 0, p = 2 * d - m - 1, myu = 0;
+    printf("m=%d d=%d myu=%d p=%d\n", m, d, myu, p);
+    for (m = 0; m < K; m++)
+    {
+        d = deg(U2[0][0][0]);
+        p = 2 * d - m - 1;
+        myu = 0;
+        for (int i = 0; i <= d; i++)
+            myu = (myu + U2[0][0][0].x[i] * s[i + (m - d)]) % N;
+
+        printf("m=%d ad=%d myu=%d p=%d\n", m, d, myu, p);
+        memset(U1, 0, sizeof(U1));
+        if (myu == 0 || p >= 0)
+        {
+            U1[0][0].x[0] = 1;
+            U1[0][1].x[p] = N - (myu);
+            U1[1][0].x[0] = 0;
+            U1[1][1].x[0] = 1;
+            // exit(1);
+        }
+        else if (myu > 0 && p < 0)
+        {
+            if (p < 0)
+            {
+                p = -1 * (p);
+            }
+            U1[0][0].x[p] = 1;
+            U1[0][1].x[0] = N - (myu);
+            U1[1][0].x[0] = oinv(myu, N);
+            U1[1][1].x[0] = 0;
+        }
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < 2; j++)
+            {
+                for (int k = 0; k < 2; k++)
+                    U2[1][i][j] = (vadd((U2[1][i][j]), (pmul(U1[i][k], U2[0][k][j]))));
+            }
+        }
+        memcpy(U2[0], U2[1], sizeof(U2[0]));
+        memset(U2[1], 0, sizeof(U2[1]));
+    }
+    t.f = U2[0][0][0];
+    t.g = U2[0][1][0];
+    t.h = U2[0][0][1];
+    if (deg(t.f) == T)
+    {
+        printsage((t.f));
+        printf(" ==chen00\n");
+        return t;
+    }
+    else
+    {
+        t.f = U2[1][0][0];
+        printsage((t.f));
+        printf("baka\n");
+        exit(1);
+    }
+}
+
 // 行列の掛け算関数
 void matrix_multiply(short A[MATRIX_SIZE][MATRIX_SIZE], short B[MATRIX_SIZE][MATRIX_SIZE], short *C, int start_row, int end_row)
 {
@@ -1297,7 +1488,8 @@ int main()
     int i;
     unsigned short s[K + 1] = {0}, z1[N] = {0};
     vec v = {0}, x = {0};
-    OP f = {0};
+    vec f = {0};
+
 
     printf("%d %d %d\n", 3, oinv(3, N), 3 * oinv(3, N) % N);
     int le = 1;
@@ -1312,7 +1504,7 @@ int main()
     // mkg(K); // Goppa Code (EEA type)
     // van(K); // RS-Code generate
     // mkd(f, K);
-    // vv(K); // Goppa Code's Parity Check (Berlekamp type)
+    // vv(K);           // Goppa Code's Parity Check (Berlekamp type)
 
     // resl(v,x);
     // exit(1);
@@ -1321,20 +1513,22 @@ int main()
 
     while (1)
     {
+        // for(i=0;i<T;i++)
+        // z1[i]=2;
         memset(z1, 0, sizeof(z1));
-        mkerr(z1, T);    // generate error vector
-        //for (int i = 0; i < T; i++)
-        //    z1[i] = i + 1;
+        // mkerr(z1, T);    // generate error vector
+        for (int i = 0; i < T; i++)
+            z1[i] = i + 1;
         f = synd(z1, K); // calc syndrome
-        x = o2v(f);      // transorm to vec
-                         // r = bma(x.x);    // Berlekamp-Massey Algorithm
-        //ymo y = bm_itr(x.x);
-        //chen(y.f);
-        //exit(1);
+        x = (f);      // transorm to vec
+        // r = bma(x.x);    // Berlekamp-Massey Algorithm
+        // ymo y=bm_itr(x.x);
+        // chen(y.f);
+        // exit(1);
         // for(i=0;i<N;i++)
         // if(z1[i]>0)
         // printf("i=%d\n",i);
-
+        // mkd(1);
         MTX b = {0};
 
         for (i = 0; i < K; i++)
@@ -1352,7 +1546,7 @@ int main()
             }
             // printf("\n");
         }
-        //printf("\n");
+        printf("\n");
         for (i = 0; i < K / 2; i++)
         {
             for (int j = 0; j < K / 2 + 1; j++)
@@ -1370,20 +1564,19 @@ int main()
             }
         }
 
-        int flg = 0,kk=0;
+        int flg = 0;
         for (i = 0; i < N; i++)
         {
-            if (z1[kk] == x.x[i] && z1[i] > 0)
+            if (z1[i] > 0 && x.x[i] > 0)
             {
                 printf("(correcting ,original) = (%d ,%d)\n", x.x[i], z1[i]);
                 flg++;
-                kk++;
             }
         }
         if (flg == T)
             break;
-
+        // printf("\n");
+        break;
     }
-
     return 0;
 }
