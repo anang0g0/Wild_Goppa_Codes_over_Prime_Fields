@@ -154,7 +154,7 @@ vec kof2(unsigned short c, vec f)
     int i, k;
     vec b = {0}, h = {0};
 
-    c = oinv(c,N);
+    c = oinv(c, N);
     printf("c=%d\n", c);
     // exit(1);
     b = f; // o2v(f);
@@ -184,30 +184,55 @@ vec vadd(vec a, vec b)
     return c;
 }
 
+vec lsft(vec a)
+{
+    vec b = {0};
+    int o = deg(a);
+
+    for (int i = 0; i < o + 1; i++)
+    {
+        b.x[i + 1] = a.x[i];
+    }
+    // b.x[K*2]=0;
+
+    return b;
+}
+
+vec rsft(vec a)
+{
+    vec b = {0};
+    int o = deg(a);
+
+    for (int i = 0; i < o + 1; i++)
+        b.x[i] = a.x[i + 1];
+    // b.x[0]=0;
+
+    return b;
+}
+
 int mul = 0, mul2 = 0;
 vec vmul(vec a, vec b)
 {
     int i, j, k, l;
     vec c = {0};
-    if (deg(a) > 128 && deg(b) > 128)
-        mul++;
-    mul2++;
 
     k = deg(a);
     l = deg(b);
 
-    for (i = 0; i < k + 1; i++)
+    i=0;
+    while(i<k+1)
     {
         for (j = 0; j < l + 1; j++)
-        // if (a.x[i] > 0)
         {
-            c.x[i + j] += (a.x[i] * b.x[j]) % N;
-            c.x[i + j] %= N;
+            if (a.x[i] > 0)
+                c.x[i + j] = (c.x[i + j] + a.x[i] * b.x[j]) % N;
         }
+        i++;
     }
 
     return c;
 }
+
 
 unsigned short vb[K * 2][N] = {0};
 unsigned short gt[K * 2][K * 2] = {0};
@@ -402,36 +427,37 @@ oterm vLT(vec f)
     return t;
 }
 
-short inv(short a,short n)
+short inv(short a, short n)
 {
-  short d = n;
-  short x = 0;
-  short s = 1;
-  while (a != 0){
-    short q = d / a;
-    short r = d % a;
-    d = a;
-    a = r;
-    short t = x - q * s;
-    x = s;
-    s = t;
-  }
-  short gcd = d; // $\gcd(a, n)$ 
+    short d = n;
+    short x = 0;
+    short s = 1;
+    while (a != 0)
+    {
+        short q = d / a;
+        short r = d % a;
+        d = a;
+        a = r;
+        short t = x - q * s;
+        x = s;
+        s = t;
+    }
+    short gcd = d; // $\gcd(a, n)$
 
-  return ((x + n) % (n / d));
+    return ((x + n) % (n / d));
 }
 
 // aに何をかけたらbになるか
 unsigned short
 equ(unsigned short a, unsigned short b)
 {
-    //for(short i=0;i<N;i++)
-    if(b==0)
-    return 0;
-    if(a==1)
-    return b;
+    // for(short i=0;i<N;i++)
+    if (b == 0)
+        return 0;
+    if (a == 1)
+        return b;
 
-    return (inv(a, N) * b)%N;
+    return (inv(a, N) * b) % N;
 }
 
 // 多項式を単行式で割る
@@ -587,16 +613,19 @@ vec opow(vec f, int n)
     return g;
 }
 
-vec vpowmod(vec f, vec mod, int n) {
-    vec v={0};
-    vec ret={0};
+vec vpowmod(vec f, vec mod, int n)
+{
+    vec v = {0};
+    vec ret = {0};
 
-     v.x[0]= 1;
-    ret=(v);
-    while (n > 0) {
-        if (n%2 == 1) ret = vmod(vmul(ret , f),mod) ;  // n の最下位bitが 1 ならば x^(2^i) をかける
-        f = vmod(vmul(f , f),mod);
-        n >>= 1;  // n を1bit 左にずらす
+    v.x[0] = 1;
+    ret = (v);
+    while (n > 0)
+    {
+        if (n % 2 == 1)
+            ret = vmod(vmul(ret, f), mod); // n の最下位bitが 1 ならば x^(2^i) をかける
+        f = vmod(vmul(f, f), mod);
+        n >>= 1; // n を1bit 左にずらす
     }
     return ret;
 }
@@ -640,14 +669,15 @@ vec ogcd(vec xx, vec yy)
     //  return yy;
 }
 
-
-short diag(MTX a,int n){
-    return (a.x[n][n]*a.x[n+1][n+1]-a.x[n][n+1]*a.x[n+1][n])%N;
+short diag(MTX a, int n)
+{
+    return (a.x[n][n] * a.x[n + 1][n + 1] - a.x[n][n + 1] * a.x[n + 1][n]) % N;
 }
 
-int resl(vec f,vec g){
-    MTX a={0};
-    short dia[N]={0};
+int resl(vec f, vec g)
+{
+    MTX a = {0};
+    short dia[N] = {0};
     /*
     f.x[0]=16;
     f.x[1]=0;
@@ -660,30 +690,40 @@ int resl(vec f,vec g){
     g.x[3]=9;
     printf("\n");
     */
-    int n=deg(f),m=deg(g);
-    if(n<m){
-    for(int i=0;i<n+1;i++){
-        for(int j=0;j<m+1;j++){
-        a.x[i+j][i]=f.x[n-j];
+    int n = deg(f), m = deg(g);
+    if (n < m)
+    {
+        for (int i = 0; i < n + 1; i++)
+        {
+            for (int j = 0; j < m + 1; j++)
+            {
+                a.x[i + j][i] = f.x[n - j];
+            }
+        }
+        for (int i = 0; i < n + m; i++)
+        {
+            for (int j = 0; j < n + m; j++)
+            {
+                a.x[j + i][i + m] = g.x[m - j];
+            }
         }
     }
-    for(int i=0;i<n+m;i++){
-        for(int j=0;j<n+m;j++){
-        a.x[j+i][i+m]=g.x[m-j];
+    if (n >= m)
+    {
+        for (int i = 0; i < m + 1; i++)
+        {
+            for (int j = 0; j < n + 1; j++)
+            {
+                a.x[i + j][i] = f.x[n - j];
+            }
         }
-    }
-    }
-    if(n>=m){
-    for(int i=0;i<m+1;i++){
-        for(int j=0;j<n+1;j++){
-        a.x[i+j][i]=f.x[n-j];
+        for (int i = 0; i < n + m + 1; i++)
+        {
+            for (int j = 0; j < n + m + 1; j++)
+            {
+                a.x[j + i][i + m] = g.x[m - j];
+            }
         }
-    }
-    for(int i=0;i<n+m+1;i++){
-        for(int j=0;j<n+m+1;j++){
-        a.x[j+i][i+m]=g.x[m-j];
-        }
-    }        
     }
     /*
     for(int i=0;i<n+m;i++){
@@ -693,23 +733,26 @@ int resl(vec f,vec g){
     }
     printf("\n");
     */
-    short tmp[N]={0};
-    int i,j,k,t;
-    for(i=0;i<m+n-1;i++){
+    short tmp[N] = {0};
+    int i, j, k, t;
+    for (i = 0; i < m + n - 1; i++)
+    {
 
-            for(k=i;k<m+n-1;k++){ //m+n
-            //printf("%d ",k);
-            t=a.x[k+1][i];
-            for(int j=i;j<n+m;j++)
+        for (k = i; k < m + n - 1; k++)
+        { // m+n
+            // printf("%d ",k);
+            t = a.x[k + 1][i];
+            for (int j = i; j < n + m; j++)
             {
-            tmp[j]=a.x[k+1][j]-(a.x[i][j]*equ(a.x[i][i],a.x[k+1][i]))%N;
-            //printf("i=%d (j=%d k+1=%d) n=%d ks=%d %d %d t=%d =%d\n",i,j,k+1,a.x[k+1][j],(a.x[i][j]*equ(a.x[i][i],a.x[k+1][i]))%N,a.x[k][j],(a.x[i][j]),t,(N+tmp[j])%N);
+                tmp[j] = a.x[k + 1][j] - (a.x[i][j] * equ(a.x[i][i], a.x[k + 1][i])) % N;
+                // printf("i=%d (j=%d k+1=%d) n=%d ks=%d %d %d t=%d =%d\n",i,j,k+1,a.x[k+1][j],(a.x[i][j]*equ(a.x[i][i],a.x[k+1][i]))%N,a.x[k][j],(a.x[i][j]),t,(N+tmp[j])%N);
             }
-            //printf("\n");
-            for(int j=0;j<n+m;j++){
-            a.x[k+1][j]=tmp[j];
-            if(a.x[k+1][j]<0)
-            a.x[k+1][j]=N+a.x[k+1][j];
+            // printf("\n");
+            for (int j = 0; j < n + m; j++)
+            {
+                a.x[k + 1][j] = tmp[j];
+                if (a.x[k + 1][j] < 0)
+                    a.x[k + 1][j] = N + a.x[k + 1][j];
             }
             /*
             for(int u=0;u<n+m;u++){
@@ -720,18 +763,19 @@ int resl(vec f,vec g){
             printf(" %d %d %d\n",k,m+n,i);
             */
         }
-        dia[i]=a.x[i][i];
+        dia[i] = a.x[i][i];
     }
-    
-    int y=diag(a,n+m-2);
 
-    for(i=0;i<m+n-2;i++){
-    y=(y*dia[i])%N;
-    if(dia[i]==0)
-    return 0;
+    int y = diag(a, n + m - 2);
+
+    for (i = 0; i < m + n - 2; i++)
+    {
+        y = (y * dia[i]) % N;
+        if (dia[i] == 0)
+            return 0;
     }
-    printf("y=%d\n",y);
-    //exit(1);
+    printf("y=%d\n", y);
+    // exit(1);
     /*
     vec c=ogcd(f,g);
     if((deg(c)>0 && y>0)){ //} || (deg(c)==0 && y==0)){
@@ -744,10 +788,10 @@ int resl(vec f,vec g){
     exit(1);
     }
     */
-    if(y>0)
-    return 0;
-    if(y==0)
-    return -1;
+    if (y > 0)
+        return 0;
+    if (y == 0)
+        return -1;
 
     return 0;
 }
@@ -790,38 +834,45 @@ vec vgcd(vec xx, vec yy)
     return tt;
 }
 
-
 // 行列の逆行列を計算する関数
-vec inverseMatrix(MTX A, MTX A_inv,int start_row,int end_row) {
+vec inverseMatrix(MTX A, MTX A_inv, int start_row, int end_row)
+{
     int i, j, k;
     short temp;
 
     // 単位行列を初期化
-    for (i = 0; i < K/2; i++) {
-        for (j = 0; j < K/2+1; j++) {
+    for (i = 0; i < K / 2; i++)
+    {
+        for (j = 0; j < K / 2 + 1; j++)
+        {
             A_inv.x[i][j] = (i == j) ? 1 : 0;
         }
     }
 
     // ガウス・ジョルダン法による逆行列の計算
-    for (k = start_row; k < end_row; k++) {
+    for (k = start_row; k < end_row; k++)
+    {
         temp = A.x[k][k];
-        for (j = 0; j < K/2+1; j++) {
-            A.x[k][j] = A.x[k][j]*oinv(temp,N);
-            A_inv.x[k][j] = A_inv.x[k][j]*oinv(temp,N)%N;
+        for (j = 0; j < K / 2 + 1; j++)
+        {
+            A.x[k][j] = A.x[k][j] * oinv(temp, N);
+            A_inv.x[k][j] = A_inv.x[k][j] * oinv(temp, N) % N;
         }
-        for (i = start_row; i < end_row; i++) {
-            if (i != k) {
+        for (i = start_row; i < end_row; i++)
+        {
+            if (i != k)
+            {
                 temp = A.x[i][k];
-                for (j = 0; j < K/2+1; j++) {
-                    A.x[i][j] -= (A.x[k][j] * temp)%N;
-                    A_inv.x[i][j] -= (A_inv.x[k][j] * temp)%N;
+                for (j = 0; j < K / 2 + 1; j++)
+                {
+                    A.x[i][j] -= (A.x[k][j] * temp) % N;
+                    A_inv.x[i][j] -= (A_inv.x[k][j] * temp) % N;
                 }
             }
         }
     }
     vec x = {0};
-    for (i = 0; i < K/2; i++)
+    for (i = 0; i < K / 2; i++)
     {
         if (N > A.x[i][K / 2])
         {
@@ -849,17 +900,18 @@ vec inverseMatrix(MTX A, MTX A_inv,int start_row,int end_row) {
             vv.x[i] = i + 1;
         }
     }
-    for(i=0;i<K/2;i++){
-        for(j=0;j<K/2+1;j++)
-        printf("%d,",A.x[i][j]);
+    for (i = 0; i < K / 2; i++)
+    {
+        for (j = 0; j < K / 2 + 1; j++)
+            printf("%d,", A.x[i][j]);
         printf("\n");
     }
-return vv;
-//exit(1);
+    return vv;
+    // exit(1);
 }
 
 // #define NN 16
-vec sol(MTX a,int start,int end)
+vec sol(MTX a, int start, int end)
 {
     unsigned int p, d;
     int i, j, k;
@@ -957,89 +1009,89 @@ vec opowmod(vec f, vec mod, int n)
 int is_equ(vec a, vec b)
 {
     for (int i = 0; i < N * N; i++)
-        if (a.x[i] != a.x[i])
+        if (a.x[i] != b.x[i])
             return -1;
 
     return 0;
 }
 
-
 // GF(2^m) then set m in this function.
 int ben_or(vec f)
 {
-  int n; //, pid;
+    int n; //, pid;
 
-  vec s = {0}, u = {0}, r = {0};
-  vec v = {0}; //, ff=o2v(f);
-  // if GF(8192) is 2^m and m==13 or if GF(4096) and m==12 if GF(16384) is testing
-  // int m = E;
-  //  m=12 as a for GF(4096)=2^12 defined @ gloal.h or here,for example m=4 and GF(16)
+    vec s = {0}, u = {0}, r = {0};
+    vec v = {0}; //, ff=o2v(f);
+    // if GF(8192) is 2^m and m==13 or if GF(4096) and m==12 if GF(16384) is testing
+    // int m = E;
+    //  m=12 as a for GF(4096)=2^12 defined @ gloal.h or here,for example m=4 and GF(16)
 
-  v.x[1] = 1;
-  s = (v);
-  // for (int i = 0; i < K / 2; i++)
-  r = s;
-  n = deg((f));
+    v.x[1] = 1;
+    s = (v);
+    // for (int i = 0; i < K / 2; i++)
+    r = s;
+    n = deg((f));
 
-  if (vLT(f).n == 0)
-  {
-    printf("f==0\n");
-    exit(1);
-  }
-  if (n == 0)
-    return -1;
-
-  // r(x)^{q^i} square pow mod
-  for (int i = 0; i < K / 2; i++)
-  {
-    printf(":i=%d", i);
-    // irreducible over GH(8192) 2^13
-    // if(r.x[0]==65535)
-    // return -1;
-    //printsage(r);
-    //printf(" --p\n");
-
-    memset(r.x,0,sizeof(r.x));
-    v=vpowmod(v,f,N);
-    //v=opowmod(v,f,N);
-    r=v;
-    //r.x[l]=1;
-
-    u = vsub(r, (s));
-    u = vmod(u, f);
-
-    if(deg(u)>0){
-    //printsage(u);
-    //printf(" you\n");
-    //printsage(f);
-    printf(" me\n");
-    u = ogcd(f, u);
-    //int le=resl(f,u);
-    //if(le==0 && deg(u)==0){
-    //    printf("baka^^\n");
-    //exit(1);
-    //return -1;
-    //}
-    printf("you\n");
-    }else{
+    if (vLT(f).n == 0)
+    {
+        printf("f==0\n");
+        exit(1);
+    }
+    if (n == 0)
         return -1;
-    }
-    if (deg(u) > 0) //  || vLT(u).a > 0)
-    {
-    //if(fequ(u,f)==1)
-    {
-      // flg[i]= -1;
-      printf("ae\n");
-      return -1;
-      }
-    }
-  }
 
-  return 0;
+    // r(x)^{q^i} square pow mod
+    for (int i = 0; i < K / 2; i++)
+    {
+        printf(":i=%d", i);
+        // irreducible over GH(8192) 2^13
+        // if(r.x[0]==65535)
+        // return -1;
+        // printsage(r);
+        // printf(" --p\n");
+
+        memset(r.x, 0, sizeof(r.x));
+        v = vpowmod(v, f, N);
+        r = v;
+        // r.x[l]=1;
+
+        u = vsub(r, (s));
+        u = vmod(u, f);
+
+        if (deg(u) > 0)
+        {
+            // printsage(u);
+            // printf(" you\n");
+            // printsage(f);
+            printf(" me\n");
+            u = ogcd(f, u);
+            // int le=resl(f,u);
+            // if(le==0 && deg(u)==0){
+            //     printf("baka^^\n");
+            // exit(1);
+            // return -1;
+            // }
+            printf("you\n");
+        }
+        else
+        {
+            return -1;
+        }
+        if (deg(u) > 0) //  || vLT(u).a > 0)
+        {
+            // if(fequ(u,f)==1)
+            {
+                // flg[i]= -1;
+                printf("ae\n");
+                return -1;
+            }
+        }
+    }
+
+    return 0;
 }
 
-
-vec mkd(OP w, int kk,int start,int end)
+vec mkd(OP w, int kk, int start, int end)
 {
     int i, j, k, l, ii = 0;
 
@@ -1062,11 +1114,12 @@ aa:
     // irreducible gvecpa code (既役多項式が必要なら、ここのコメントを外すこと。)
 
     w = mkpol();
-     l=ben_or(o2v(w));
-     while(l== -1) goto aa;
+    l = ben_or(o2v(w));
+    while (l == -1)
+        goto aa;
     printsage(o2v(w));
     printf("\n");
-    // exit(1);
+    exit(1);
     //     printf("wwwwwww\n");
     //  exit(1);
     //  separable gvecpa code
@@ -1414,18 +1467,21 @@ ymo bm_itr(unsigned short s[])
 }
 
 // 行列の掛け算関数
-void matrix_multiply(short A[MATRIX_SIZE][MATRIX_SIZE], short B[MATRIX_SIZE][MATRIX_SIZE], short *C, int start_row, int end_row) {
-    for (int i = start_row; i < end_row; i++) {
-        for (int j = 0; j < MATRIX_SIZE; j++) {
+void matrix_multiply(short A[MATRIX_SIZE][MATRIX_SIZE], short B[MATRIX_SIZE][MATRIX_SIZE], short *C, int start_row, int end_row)
+{
+    for (int i = start_row; i < end_row; i++)
+    {
+        for (int j = 0; j < MATRIX_SIZE; j++)
+        {
             short sum = 0.0;
-            for (int k = 0; k < MATRIX_SIZE; k++) {
+            for (int k = 0; k < MATRIX_SIZE; k++)
+            {
                 sum += A[i][k] * B[k][j];
             }
-            C[i*MATRIX_SIZE+j] = sum;
+            C[i * MATRIX_SIZE + j] = sum;
         }
     }
 }
-
 
 int main()
 {
@@ -1434,25 +1490,26 @@ int main()
     vec v = {0}, x = {0};
     OP f = {0};
 
+
     printf("%d %d %d\n", 3, oinv(3, N), 3 * oinv(3, N) % N);
-    int le=1;
-    for(i=1;i<65;i++){
-    for(int j=0;j<13;j++)
-    le=(13*le)%128;
-    printf("le=%d %d\n",le,i);
+    int le = 1;
+    for (i = 1; i < 65; i++)
+    {
+        for (int j = 0; j < 13; j++)
+            le = (13 * le) % 128;
+        printf("le=%d %d\n", le, i);
     }
     // exit(1);
     srand(clock());
     // mkg(K); // Goppa Code (EEA type)
     // van(K); // RS-Code generate
-    //mkd(f, K);
+    // mkd(f, K);
     // vv(K);           // Goppa Code's Parity Check (Berlekamp type)
 
-    //resl(v,x);
-    //exit(1);
+    // resl(v,x);
+    // exit(1);
 
-    mkd(f,K,0,K);    
-
+    mkd(f, K, 0, K);
 
     while (1)
     {
@@ -1478,7 +1535,7 @@ int main()
             v.x[K - 1 - i] = x.x[i];
         printpol(v);
         printf(" ==synpol\n");
-        //exit(1);
+        // exit(1);
 
         for (i = 0; i < K / 2; i++)
         {
@@ -1496,8 +1553,8 @@ int main()
                 printf("e%d,", b.x[i][j]);
             printf("\n");
         }
-    
-        x = sol(b,0,K/2);
+
+        x = sol(b, 0, K / 2);
         for (i = 0; i < N; i++)
         {
             if (z1[i] != x.x[i] && z1[i] > 0 && x.x[i])
