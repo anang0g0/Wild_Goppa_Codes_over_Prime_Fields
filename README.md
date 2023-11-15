@@ -1,6 +1,9 @@
 # Goppa Code Decorder by Peterson Algorithm over Prime Fields
-gcc -O3 fujitama.c
+gcc -O3 fujiyama.c  
+ulimit -s unlimited  
+./a.out  
 
+-------
 # 20231115
 誤り値の決定。これはちょっと難しいぞと思って３日くらい悩んだけど、よく考えてみれば生成行列にエラーの値をかけただけだから、
 エラーの位置が決まったら、そこの列を取り出して部分行列の逆行列をシンドロームにかけてやればいいとわかってスッキリ。
