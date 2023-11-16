@@ -1065,12 +1065,12 @@ int ben_or(vec f)
             // printsage(f);
             printf(" me\n");
             u = ogcd(f, u);
-            // int le=resl(f,u);
-            // if(le==0 && deg(u)==0){
-            //     printf("baka^^\n");
-            // exit(1);
+            int le=resl(f,u);
+            if((le==0 && deg(u)>0) || (le==-1 && deg(u)==0)){
+                 printf("baka^^\n");
+             exit(1);
             // return -1;
-            // }
+             }
             printf("you\n");
         }
         else
