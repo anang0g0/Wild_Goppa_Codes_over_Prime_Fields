@@ -90,8 +90,10 @@ unsigned short oinv(unsigned short a, unsigned short n)
 {
     unsigned short i;
 
-    if (a == 0)
+    if (a == 0 || a%N==0)
         return 0;
+    if(a<0)
+        a+=N;
     // if (a == 1)
     //     return 1;
     for (i = 1; i < n; i++)
@@ -99,7 +101,7 @@ unsigned short oinv(unsigned short a, unsigned short n)
         if ((i * a) % N == 1)
             return i;
     }
-    printf("no return\n");
+    printf("no return %d\n",a);
     exit(1);
 }
 
@@ -712,18 +714,61 @@ void luDecomposition(int n, short mat[MAX_SIZE][MAX_SIZE], short lower[MAX_SIZE]
     }
 }
 
-short determinantLU(int n, short lower[MAX_SIZE][MAX_SIZE], short upper[MAX_SIZE][MAX_SIZE]) {
+short determinantLU(int n, short upper[MAX_SIZE][MAX_SIZE]) {
     short det = 1;
     for (int i = 0; i < n; i++) {
         det *= upper[i][i];
+        det%=N;
     }
+    if(det<0)
+    det+=N;
     return det%N;
+}
+
+// 行列式を計算する再帰的な関数
+short determinant(int n, short matrix[MAX_SIZE][MAX_SIZE]) {
+    if (n == 1) {
+        return matrix[0][0]%N;
+    } else if (n == 2) {
+        return (matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0])%N;
+    } else {
+        short det = 0;
+        int i, j, k;
+        short submatrix[MAX_SIZE][MAX_SIZE]={0};
+
+        for (i = 0; i < n; i++) {
+            // サブマトリックスを作成
+            for (j = 1; j < n; j++) {
+                for (k = 0; k < n; k++) {
+                    if (k < i) {
+                        submatrix[j - 1][k] = matrix[j][k];
+                    } else if (k > i) {
+                        submatrix[j - 1][k - 1] = matrix[j][k];
+                    }
+                }
+            }
+
+            // 再帰的に行列式を計算
+            det += matrix[0][i] * determinant(n - 1, submatrix) * ((i % 2 == 0) ? 1 : -1);
+            det%=N;
+        }
+
+        return det;
+    }
 }
 
 int resl(vec f, vec g)
 {
     MTX a = {0};
     short dia[N] = {0};
+    /*
+    a.x[0][0] = 2; a.x[0][1] = 1; a.x[0][2] = 5; a.x[0][3] = 3;
+    a.x[1][0] = 3; a.x[1][1] = 0; a.x[1][2] = 1; a.x[1][3] = 6;
+    a.x[2][0] = 1; a.x[2][1] = 4; a.x[2][2] = 3; a.x[2][3] = 3;
+    a.x[3][0] = 8; a.x[3][1] = 2; a.x[3][2] = 0; a.x[3][3] = 1;
+    */
+    int n = deg(f), m = deg(g);
+
     /*
     f.x[0]=16;
     f.x[1]=0;
@@ -734,9 +779,9 @@ int resl(vec f, vec g)
     g.x[1]=9;
     g.x[2]=10;
     g.x[3]=9;
-    printf("\n");
+    printf("\n");    
     */
-    int n = deg(f), m = deg(g);
+   
     if (n < m)
     {
         for (int i = 0; i < n + 1; i++)
@@ -771,6 +816,7 @@ int resl(vec f, vec g)
             }
         }
     }
+    
     /*
     for(int i=0;i<n+m;i++){
         for(int j=0;j<m+n;j++)
@@ -780,37 +826,40 @@ int resl(vec f, vec g)
     printf("n+m=%d\n",n+m);
     */
       
-   /*
+   
     short lower[N][N];
     short upper[N][N];
-    memset(upper,0,sizeof(upper));
-    memset(lower,0,sizeof(lower));
+    //memset(upper,0,sizeof(upper));
+    //memset(lower,0,sizeof(lower));
 
     // LU分解
-    luDecomposition(n+m, a.x, lower, upper);
+    //luDecomposition(n+m, a.x, lower, upper);
 
     // 行列式を計算
-    short det = determinantLU(n+m, lower, upper);
-    printf("行列式の値: %d\n", det);
-    */
+    //short det = determinantLU(n+m, upper);
+    //printf("行列式の値: %d\n", det);
+    //exit(1);
+    //int det=determinant(n+m,a.x);
+    //    printf("%d pu!\n",det);
+    //exit(1);
     
     short tmp[N] = {0};
     int i, j, k, t;
     
-    for (i = 0; i < m + n - 1; i++)
+    for (i = 0; i < m+n-1; i++)
     {
 
-        for (k = i; k < m + n - 1; k++)
+        for (k = i; k < m+n-1; k++)
         { // m+n
             // printf("%d ",k);
             t = a.x[k + 1][i];
-            for (int j = i; j < n + m; j++)
+            for (int j = i; j < m+n; j++)
             {
                 tmp[j] = a.x[k + 1][j] - (a.x[i][j] * equ(a.x[i][i], a.x[k + 1][i])) % N;
                 // printf("i=%d (j=%d k+1=%d) n=%d ks=%d %d %d t=%d =%d\n",i,j,k+1,a.x[k+1][j],(a.x[i][j]*equ(a.x[i][i],a.x[k+1][i]))%N,a.x[k][j],(a.x[i][j]),t,(N+tmp[j])%N);
             }
             // printf("\n");
-            for (int j = 0; j < n + m; j++)
+            for (int j = 0; j < n+m; j++)
             {
                 a.x[k + 1][j] = tmp[j];
                 if (a.x[k + 1][j] < 0)
@@ -824,46 +873,28 @@ int resl(vec f, vec g)
                 printf("\n");
             }
             printf(" %d %d %d\n",k,m+n,i);
-         */   
+         */
         }
         
     }
     
     for(i=0;i<n+m;i++)
     dia[i]=a.x[i][i];
-    int y = diag(a, n + m - 2);
+    int y = diag(a, n+m - 2);
 
-    for (i = 0; i < m + n - 2; i++)
+    for (i = 0; i < n+m - 2; i++)
     {
         y = (y * dia[i]) % N;
         if (dia[i] == 0)
             return -1;
     }
     
-
-    //if(det!=y)
-    {
-    printf("y=%d\n", y);
-     //exit(1);
-    }
-    /*
-    vec c=ogcd(f,g);
-    if((deg(c)>0 && y>0)){ //} || (deg(c)==0 && y==0)){
-    printsage(c);
-    printf(" ==baka\n");
-    printsage(f);
-    printf(" ==f\n");
-    printsage(g);
-    printf(" ==g\n");
-    exit(1);
-    }
-    */
     if (y > 0)
         return 0;
     if (y == 0)
         return -1;
 
-    return 0;
+//    return 0;
 }
 
 int cnty = 0;
@@ -1172,7 +1203,7 @@ aa:
         goto aa;
     printsage((w));
     printf("\n");
-    //exit(1);
+    exit(1);
     //     printf("wwwwwww\n");
     //  exit(1);
     //  separable gvecpa code
