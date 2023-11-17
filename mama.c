@@ -564,13 +564,10 @@ vec vmod(vec f, vec g)
         h = vterml(g, c);
         f = vsub(f, h);
         // printsage(g);
-        if (deg((f)) == 0 || deg((h)) == 0)
+        if (deg((f)) == 0 || deg((h)) == 0 || c.n==0)
         {
             break;
         }
-
-        if (c.n == 0)
-            break;
     }
     // printf("vmod-baka== %d %d\n",deg(f),deg(g));
     return f;
@@ -615,17 +612,17 @@ vec opow(vec f, int n)
     return g;
 }
 
+vec table[128]={0};
 vec vpowmod(vec f, vec mod, int n)
 {
-    vec v = {0};
     vec ret = {0};
 
-    v.x[0] = 1;
-    ret = (v);
+    ret.x[0] = 1;
     while (n > 0)
     {
-        if (n % 2 == 1)
-            ret = vmod(vmul(ret, f), mod); // n の最下位bitが 1 ならば x^(2^i) をかける
+        if (n % 2 == 1){
+        ret = vmod(vmul(ret, f), mod); // n の最下位bitが 1 ならば x^(2^i) をかける
+        }
         f = vmod(vmul(f, f), mod);
         n >>= 1; // n を1bit 左にずらす
     }
@@ -989,6 +986,38 @@ int is_equ(vec a, vec b)
     return 0;
 }
 
+
+
+void win(vec f,vec mod)
+{
+    // テーブルの生成
+    //table[0].x[0]=1;
+    table[0]=f;
+    vec ret=f;
+    for (int i = 2; i < 13;i++) {
+        f = vmod(vmul(f,f),mod);
+        table[i]=f;
+    }
+
+}
+
+vec fpowmod(int n){
+    vec ret={0};
+    int c=0;
+
+    while (n > 0)
+    {
+        if (n % 2 == 1)
+            ret = vadd(ret, table[c]); // n の最下位bitが 1 ならば x^(2^i) をかける
+        n >>= 1; // n を1bit 左にずらす
+        c++;
+        //printsage(ret);
+        //printf("damn %d\n",c);
+    }
+
+return ret;
+}
+
 // GF(2^m) then set m in this function.
 int ben_or(vec f)
 {
@@ -1000,6 +1029,8 @@ int ben_or(vec f)
     // if GF(8192) is 2^m and m==13 or if GF(4096) and m==12 if GF(16384) is testing
     // int m = E;
     //  m=12 as a for GF(4096)=2^12 defined @ gloal.h or here,for example m=4 and GF(16)
+    for(int i=0;i<128;i++)
+    table[i]=u;
 
     v.x[1] = 1;
     s = (v);
@@ -1019,18 +1050,21 @@ int ben_or(vec f)
     for (int i = 0; i < K / 2; i++)
     {
         printf(":i=%d", i);
-        // irreducible over GH(8192) 2^13
-        // if(r.x[0]==65535)
-        // return -1;
-        // printsage(r);
-        // printf(" --p\n");
-
+        int l=1;
+        for(int jj=0;jj<i+1;jj++){
+        l=13*l%(K+1);
+        //printf("jj=%d %d\n",l,jj);
+        }
+        //win(v,f);
         memset(r.x, 0, sizeof(r.x));
+        //exit(1);
         v = vpowmod(v, f, N);
+        //v=fpowmod(N);
         r = v;
-        // r.x[l]=1;
+        //r.x[l]=1;
 
-        r = vsub(v, (s));
+        r = vsub(r, (s));
+
         u = vmod(r, f);
 
         int le = 0;
@@ -1071,11 +1105,12 @@ vec mkd(vec w, int kk, int start, int end)
 
     short tr[N] = {0};
     short ta[N] = {0};
-    vec v = {0}, pp = {0}, tt = {0};
+    vec v = {0}, ff = {0}, tt = {0};
     short po[K + 1] = {1, 0, 1, 0, 5};
     // vec w={0};
     vec r = {0};
-
+    
+    ff.x[1]=1;
 aa:
 
     // printf("\n");
@@ -1088,12 +1123,13 @@ aa:
     // irreducible gvecpa code (既役多項式が必要なら、ここのコメントを外すこと。)
 
     w = mkpol();
+    win(ff,w);
     l = ben_or((w));
     while (l == -1)
         goto aa;
     printsage((w));
     printf("\n");
-    //exit(1);
+    exit(1);
     //     printf("wwwwwww\n");
     //  exit(1);
     //  separable gvecpa code
