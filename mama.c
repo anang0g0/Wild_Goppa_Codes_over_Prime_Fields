@@ -15,17 +15,21 @@
 #include "chash-p.c"
 
 #define SEPARABLE 0
-#define MATRIX_SIZE 16
+#define MATRIX_SIZE K * 2
 #define SHM_KEY 128
 #define MAX_SIZE N
-unsigned short g[K + 1] = {0};
+
+// 行列要素の型（例：int）
+typedef int matrix_element;
+
+short g[K + 1] = {0};
 
 // ランダム多項式の生成
 static void
 ginit(void)
 {
     int j, count = 0, k = 0;
-    unsigned short gg[K + 1] = {0};
+    short gg[K + 1] = {0};
 
     printf("in ginit\n");
 
@@ -86,14 +90,14 @@ OP v2o(vec a)
     return f;
 }
 
-unsigned short oinv(unsigned short a, unsigned short n)
+short oinv(short a, short n)
 {
-    unsigned short i;
+    short i;
 
-    if (a == 0 || a%N==0)
+    if (a == 0 || a % N == 0)
         return 0;
-    if(a<0)
-        a+=N;
+    if (a < 0)
+        a += N;
     // if (a == 1)
     //     return 1;
     for (i = 1; i < n; i++)
@@ -101,7 +105,7 @@ unsigned short oinv(unsigned short a, unsigned short n)
         if ((i * a) % N == 1)
             return i;
     }
-    printf("no return %d\n",a);
+    printf("no return %d\n", a);
     exit(1);
 }
 
@@ -151,7 +155,7 @@ void printpol(vec a)
     return;
 }
 
-vec kof2(unsigned short c, vec f)
+vec kof2(short c, vec f)
 {
     int i, k;
     vec b = {0}, h = {0};
@@ -221,8 +225,8 @@ vec vmul(vec a, vec b)
     k = deg(a);
     l = deg(b);
 
-    i=0;
-    while(i<k+1)
+    i = 0;
+    while (i < k + 1)
     {
         for (j = 0; j < l + 1; j++)
         {
@@ -235,9 +239,8 @@ vec vmul(vec a, vec b)
     return c;
 }
 
-
-unsigned short vb[K * 2][N] = {0};
-unsigned short gt[K * 2][K * 2] = {0};
+short vb[K * 2][N] = {0};
+short gt[K * 2][K * 2] = {0};
 
 void van(int kk)
 {
@@ -287,7 +290,7 @@ void ogt(int kk)
 }
 
 // 配列の値を係数として多項式に設定する
-vec setpol(unsigned short f[], int n)
+vec setpol(short f[], int n)
 {
     vec g;
     vec v = {0};
@@ -354,8 +357,7 @@ vec mkpol()
     return w;
 }
 
-unsigned short
-v2a(oterm a)
+short v2a(oterm a)
 {
     int j;
 
@@ -393,10 +395,9 @@ void printsage(vec a)
 }
 
 // 多項式の代入値
-unsigned short
-trace(vec f, unsigned short x)
+short trace(vec f, short x)
 {
-    unsigned short u = 0;
+    short u = 0;
     vec v = (f);
     int d = deg((v)) + 1;
 
@@ -450,8 +451,7 @@ short inv(short a, short n)
 }
 
 // aに何をかけたらbになるか
-unsigned short
-equ(unsigned short a, unsigned short b)
+short equ(short a, short b)
 {
     // for(short i=0;i<N;i++)
     if (b == 0)
@@ -676,91 +676,10 @@ short diag(MTX a, int n)
     return (a.x[n][n] * a.x[n + 1][n + 1] - a.x[n][n + 1] * a.x[n + 1][n]) % N;
 }
 
-
-void luDecomposition(int n, short mat[MAX_SIZE][MAX_SIZE], short lower[MAX_SIZE][MAX_SIZE], short upper[MAX_SIZE][MAX_SIZE]) {
-    int i, j, k;
-
-    // LU分解の初期化
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
-            lower[i][j] = 0;
-            upper[i][j] = 0;
-        }
-    }
-
-    // LU分解
-    for (i = 0; i < n; i++) {
-        for (j = i; j < n; j++) {
-            short sum = 0;
-            for (k = 0; k < i; k++) {
-                sum += lower[i][k] * upper[k][j];
-                sum%=N;
-            }
-            upper[i][j] = mat[i][j] - sum;
-        }
-
-        for (j = i; j < n; j++) {
-            if (i == j) {
-                lower[i][i] = 1;
-            } else {
-                short sum = 0;
-                for (k = 0; k < i; k++) {
-                    sum += lower[j][k] * upper[k][i];
-                    sum%=N;
-                }
-                lower[j][i] = ((mat[j][i] - sum) * oinv(upper[i][i],N))%N;
-            }
-        }
-    }
-}
-
-short determinantLU(int n, short upper[MAX_SIZE][MAX_SIZE]) {
-    short det = 1;
-    for (int i = 0; i < n; i++) {
-        det *= upper[i][i];
-        det%=N;
-    }
-    if(det<0)
-    det+=N;
-    return det%N;
-}
-
-// 行列式を計算する再帰的な関数
-short determinant(int n, short matrix[MAX_SIZE][MAX_SIZE]) {
-    if (n == 1) {
-        return matrix[0][0]%N;
-    } else if (n == 2) {
-        return (matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0])%N;
-    } else {
-        short det = 0;
-        int i, j, k;
-        short submatrix[MAX_SIZE][MAX_SIZE]={0};
-
-        for (i = 0; i < n; i++) {
-            // サブマトリックスを作成
-            for (j = 1; j < n; j++) {
-                for (k = 0; k < n; k++) {
-                    if (k < i) {
-                        submatrix[j - 1][k] = matrix[j][k];
-                    } else if (k > i) {
-                        submatrix[j - 1][k - 1] = matrix[j][k];
-                    }
-                }
-            }
-
-            // 再帰的に行列式を計算
-            det += matrix[0][i] * determinant(n - 1, submatrix) * ((i % 2 == 0) ? 1 : -1);
-            det%=N;
-        }
-
-        return det;
-    }
-}
-
-int resl(vec f, vec g)
+MTX mkmat(vec f, vec g)
 {
     MTX a = {0};
-    short dia[N] = {0};
+
     /*
     a.x[0][0] = 2; a.x[0][1] = 1; a.x[0][2] = 5; a.x[0][3] = 3;
     a.x[1][0] = 3; a.x[1][1] = 0; a.x[1][2] = 1; a.x[1][3] = 6;
@@ -779,9 +698,9 @@ int resl(vec f, vec g)
     g.x[1]=9;
     g.x[2]=10;
     g.x[3]=9;
-    printf("\n");    
+    printf("\n");
     */
-   
+
     if (n < m)
     {
         for (int i = 0; i < n + 1; i++)
@@ -816,85 +735,66 @@ int resl(vec f, vec g)
             }
         }
     }
-    
-    /*
-    for(int i=0;i<n+m;i++){
-        for(int j=0;j<m+n;j++)
-        printf("%d,",a.x[i][j]);
-        printf("\n");
-    }
-    printf("n+m=%d\n",n+m);
-    */
-      
-   
-    short lower[N][N];
-    short upper[N][N];
-    //memset(upper,0,sizeof(upper));
-    //memset(lower,0,sizeof(lower));
 
-    // LU分解
-    //luDecomposition(n+m, a.x, lower, upper);
+    return a;
+}
 
-    // 行列式を計算
-    //short det = determinantLU(n+m, upper);
-    //printf("行列式の値: %d\n", det);
-    //exit(1);
-    //int det=determinant(n+m,a.x);
-    //    printf("%d pu!\n",det);
-    //exit(1);
-    
+int resl(vec f, vec g)
+{
+    MTX a = {0};
+    short dia[N] = {0};
+
+    int m = deg(f);
+    int n = deg(g);
+
+    a = mkmat(f, g);
+
     short tmp[N] = {0};
     int i, j, k, t;
-    
-    for (i = 0; i < m+n-1; i++)
+
+    for (i = 0; i < m + n - 1; i++)
     {
 
-        for (k = i; k < m+n-1; k++)
+        for (k = i; k < m + n - 1; k++)
         { // m+n
-            // printf("%d ",k);
             t = a.x[k + 1][i];
-            for (int j = i; j < m+n; j++)
+            for (int j = i; j < m + n; j++)
             {
-                tmp[j] = a.x[k + 1][j] - (a.x[i][j] * equ(a.x[i][i], a.x[k + 1][i])) % N;
-                // printf("i=%d (j=%d k+1=%d) n=%d ks=%d %d %d t=%d =%d\n",i,j,k+1,a.x[k+1][j],(a.x[i][j]*equ(a.x[i][i],a.x[k+1][i]))%N,a.x[k][j],(a.x[i][j]),t,(N+tmp[j])%N);
+                tmp[j] = a.x[k + 1][j] - (a.x[i][j] * equ(a.x[i][i], a.x[k + 1][i])) % N; // equ(a,b)は素体上でaに何をかけたらbになるか、その答えを返します
             }
-            // printf("\n");
-            for (int j = 0; j < n+m; j++)
+            for (int j = 0; j < n + m; j++)
             {
                 a.x[k + 1][j] = tmp[j];
                 if (a.x[k + 1][j] < 0)
                     a.x[k + 1][j] = N + a.x[k + 1][j];
             }
-            
-            /*
-            for(int u=0;u<n+m;u++){
-                for(int v=0;v<n+m;v++)
-                printf("%d ",a.x[u][v]);
-                printf("\n");
-            }
-            printf(" %d %d %d\n",k,m+n,i);
-         */
         }
-        
     }
-    
-    for(i=0;i<n+m;i++)
-    dia[i]=a.x[i][i];
-    int y = diag(a, n+m - 2);
 
-    for (i = 0; i < n+m - 2; i++)
+    for (int i = 0; i < n + m; i++)
+        dia[i] = a.x[i][i];
+    int y = diag(a, n + m - 2);
+
+    for (int i = 0; i < n + m - 2; i++)
     {
         y = (y * dia[i]) % N;
         if (dia[i] == 0)
             return -1;
     }
-    
+    /*
+    if(y!=det){
+        printf("no=%d %d\n",det,y);
+        exit(1);
+    }
+    */
+
     if (y > 0)
         return 0;
     if (y == 0)
         return -1;
 
-//    return 0;
+    printf("no return in resl\n");
+    exit(1);
 }
 
 int cnty = 0;
@@ -1014,7 +914,7 @@ vec inverseMatrix(MTX A, MTX A_inv, int start_row, int end_row)
 // #define NN 16
 vec sol(MTX a, int start, int end)
 {
-    unsigned int p, d;
+    int p, d;
     int i, j, k;
     vec v = {0};
 
@@ -1080,7 +980,6 @@ vec sol(MTX a, int start, int end)
     return vv;
 }
 
-
 int is_equ(vec a, vec b)
 {
     for (int i = 0; i < N * N; i++)
@@ -1090,13 +989,11 @@ int is_equ(vec a, vec b)
     return 0;
 }
 
-
-
 // GF(2^m) then set m in this function.
 int ben_or(vec f)
 {
     int n; //, pid;
-    int count =0;
+    int count = 0;
 
     vec s = {0}, u = {0}, r = {0};
     vec v = {0}; //, ff=o2v(f);
@@ -1136,34 +1033,27 @@ int ben_or(vec f)
         r = vsub(v, (s));
         u = vmod(r, f);
 
-        int le=0;
+        int le = 0;
         if (deg(u) > 0)
         {
             // printsage(u);
             // printf(" you\n");
             // printsage(f);
             printf(" me\n");
-            //le=resl(f,r);
-            //if(le==0)
-            //count++;
-            u = ogcd(f, r);
-            //if(le==-1)
-            //return -1;
-            //if((le==0 && deg(u)>0) || (le==-1 && deg(u)==0)){
-            //    printf("baka^^\n");
-            // exit(1);
-            // return -1;
-            //}
-            //printf("count_you %d\n\n",count);
+            //le = resl(f, r);
+            //if (le == 0)
+            //    count++;
+             u = ogcd(f, r);
+            //if (le == -1)
+             //   return -1;
         }
         else
         {
             return -1;
         }
-        
-        //if (le==-1 ){
-        if(deg(u) > 0){
-            // if(fequ(u,f)==1)
+
+        //if (le == -1){
+            if(deg(u) > 0){
             {
                 // flg[i]= -1;
                 printf("ae\n");
@@ -1171,7 +1061,7 @@ int ben_or(vec f)
             }
         }
     }
-    //if(count==T-1)
+    // if(count==T-1)
     return 0;
 }
 
@@ -1179,10 +1069,10 @@ vec mkd(vec w, int kk, int start, int end)
 {
     int i, j, k, l, ii = 0;
 
-    unsigned short tr[N] = {0};
-    unsigned short ta[N] = {0};
+    short tr[N] = {0};
+    short ta[N] = {0};
     vec v = {0}, pp = {0}, tt = {0};
-    unsigned short po[K + 1] = {1, 0, 1, 0, 5};
+    short po[K + 1] = {1, 0, 1, 0, 5};
     // vec w={0};
     vec r = {0};
 
@@ -1203,7 +1093,7 @@ aa:
         goto aa;
     printsage((w));
     printf("\n");
-    exit(1);
+    //exit(1);
     //     printf("wwwwwww\n");
     //  exit(1);
     //  separable gvecpa code
@@ -1277,27 +1167,6 @@ aa:
         printf("\n");
     }
 
-    /*
-        for (int i = 0; i < N; i++)
-        {
-            for (int j = 0; j < kk; j++)
-            {
-                mat[j][i] = vb[j][i];
-            }
-        }
-    */
-    // printf("\n");
-    // exit(1);
-    /*
-    for( int j = 0; j < N; j++)
-    {
-        for( int i= 0; i < kk; i++)
-            printf("%d,", mat[j][i]);
-        printf("\n");
-    }
-    //exit(1);
-    //wait();
-*/
 
     return (w);
 }
@@ -1306,8 +1175,8 @@ void vv(int kk)
 {
     int i, j;
     vec r = mkpol();
-    unsigned short tr[N];
-    unsigned short ta[N] = {0};
+    short tr[N];
+    short ta[N] = {0};
 
     printf("van der\n");
 
@@ -1363,7 +1232,7 @@ aa:
     }
 }
 
-void mkerr(unsigned short *z1, int num)
+void mkerr(short *z1, int num)
 {
     int j, l;
 
@@ -1384,9 +1253,9 @@ void mkerr(unsigned short *z1, int num)
     }
 }
 
-vec synd(unsigned short zz[], int kk)
+vec synd(short zz[], int kk)
 {
-    unsigned short syn[K] = {0}, s = 0;
+    short syn[K] = {0}, s = 0;
     int i, j;
     vec f = {0};
 
@@ -1419,7 +1288,7 @@ vec chen(vec f)
 {
     vec e = {0};
     int i, n, x = 0, count = 0;
-    unsigned short z;
+    short z;
 
     n = deg((f));
     for (x = 0; x < N; x++)
@@ -1480,75 +1349,6 @@ vec pmul(vec a, vec b)
     return c;
 }
 
-ymo bm_itr(unsigned short s[])
-{
-    vec U1[2][2] = {0}, U2[2][2][2] = {0}, null = {0};
-    int i, j, k;
-    ymo t = {0};
-
-    U2[0][0][0].x[0] = 1;       // f[0];
-    U2[0][0][1].x[0] = 0;       // fai[0];
-    U2[0][1][0].x[0] = 0;       // g[0];
-    U2[0][1][1].x[0] = N - (1); // thi[0];
-    int m = 0, d = 0, p = 2 * d - m - 1, myu = 0;
-    printf("m=%d d=%d myu=%d p=%d\n", m, d, myu, p);
-    for (m = 0; m < K; m++)
-    {
-        d = deg(U2[0][0][0]);
-        p = 2 * d - m - 1;
-        myu = 0;
-        for (int i = 0; i <= d; i++)
-            myu = (myu + U2[0][0][0].x[i] * s[i + (m - d)]) % N;
-
-        printf("m=%d ad=%d myu=%d p=%d\n", m, d, myu, p);
-        memset(U1, 0, sizeof(U1));
-        if (myu == 0 || p >= 0)
-        {
-            U1[0][0].x[0] = 1;
-            U1[0][1].x[p] = N - (myu);
-            U1[1][0].x[0] = 0;
-            U1[1][1].x[0] = 1;
-            // exit(1);
-        }
-        else if (myu > 0 && p < 0)
-        {
-            if (p < 0)
-            {
-                p = -1 * (p);
-            }
-            U1[0][0].x[p] = 1;
-            U1[0][1].x[0] = N - (myu);
-            U1[1][0].x[0] = oinv(myu, N);
-            U1[1][1].x[0] = 0;
-        }
-        for (int i = 0; i < 2; i++)
-        {
-            for (int j = 0; j < 2; j++)
-            {
-                for (int k = 0; k < 2; k++)
-                    U2[1][i][j] = (vadd((U2[1][i][j]), (pmul(U1[i][k], U2[0][k][j]))));
-            }
-        }
-        memcpy(U2[0], U2[1], sizeof(U2[0]));
-        memset(U2[1], 0, sizeof(U2[1]));
-    }
-    t.f = U2[0][0][0];
-    t.g = U2[0][1][0];
-    t.h = U2[0][0][1];
-    if (deg(t.f) == T)
-    {
-        printsage((t.f));
-        printf(" ==chen00\n");
-        return t;
-    }
-    else
-    {
-        t.f = U2[1][0][0];
-        printsage((t.f));
-        printf("baka\n");
-        exit(1);
-    }
-}
 
 // 行列の掛け算関数
 void matrix_multiply(short A[MATRIX_SIZE][MATRIX_SIZE], short B[MATRIX_SIZE][MATRIX_SIZE], short *C, int start_row, int end_row)
@@ -1570,25 +1370,13 @@ void matrix_multiply(short A[MATRIX_SIZE][MATRIX_SIZE], short B[MATRIX_SIZE][MAT
 int main()
 {
     int i;
-    unsigned short s[K + 1] = {0}, z1[N] = {0};
+    short s[K + 1] = {0}, z1[N] = {0};
     vec v = {0}, x = {0};
     vec f = {0};
 
-    /*
-    printf("%d %d %d\n", 3, oinv(3, N), 3 * oinv(3, N) % N);
-    int le = 1;
-    for (i = 1; i < 65; i++)
-    {
-        for (int j = 0; j < 13; j++)
-            le = (13 * le) % 128;
-        printf("le=%d %d\n", le, i);
-    }
-    */
-    // exit(1);
     srand(clock());
     // mkg(K); // Goppa Code (EEA type)
     // van(K); // RS-Code generate
-    // mkd(f, K);
     // vv(K);           // Goppa Code's Parity Check (Berlekamp type)
 
     // resl(v,x);
@@ -1598,22 +1386,16 @@ int main()
 
     while (1)
     {
-        // for(i=0;i<T;i++)
-        // z1[i]=2;
         memset(z1, 0, sizeof(z1));
         // mkerr(z1, T);    // generate error vector
         for (int i = 0; i < T; i++)
             z1[i] = i + 1;
         f = synd(z1, K); // calc syndrome
-        x = (f);      // transorm to vec
-        // r = bma(x.x);    // Berlekamp-Massey Algorithm
-        // ymo y=bm_itr(x.x);
-        // chen(y.f);
-        // exit(1);
+        x = (f);         // transorm to vec
         // for(i=0;i<N;i++)
         // if(z1[i]>0)
         // printf("i=%d\n",i);
-        // mkd(1);
+
         MTX b = {0};
 
         for (i = 0; i < K; i++)
