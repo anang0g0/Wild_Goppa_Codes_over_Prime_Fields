@@ -5,12 +5,12 @@
 //符号のパラーメータの指定。通常[N,K,T]として、
 //Nは符号の長さ、Kが符号の次元、Tは訂正エラー数
 //を表す。ここではDは符号長にしている。
-#define N 8209 // 符号長
-#define M N //有限体の元の数
-#define K (128) //符号の次元
-#define E (14)   //拡大体のビット数
-#define DEG N //(K * E)
-#define T (K / 2) //エラーの数
+#define N 8209 // set small prime
+#define M N // order of group
+#define K (128) // degree of polynomial
+#define E (14)   // bit size of prime
+#define DEG N // set (K * E) < N
+#define T (K / 2) // weight of error vector
 
 
 unsigned short mat[N][K*E] = {0};
