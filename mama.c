@@ -1051,14 +1051,15 @@ int ben_or(vec f)
     {
         printf(":i=%d", i);
         int l=1;
-        for(int jj=0;jj<i+1;jj++){
-        l=13*l%(K+1);
+        //for(int jj=0;jj<i+1;jj++){
+        //l=13*l%(K+1);
         //printf("jj=%d %d\n",l,jj);
-        }
+        //}
         //win(v,f);
         memset(r.x, 0, sizeof(r.x));
         //exit(1);
         v = vpowmod(v, f, N);
+
         //v=fpowmod(N);
         r = v;
         //r.x[l]=1;
