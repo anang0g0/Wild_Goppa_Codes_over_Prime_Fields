@@ -1,9 +1,18 @@
-# Goppa Code Decorder by Peterson Algorithm over Prime Fields
+# Wild Goppa Code Decorder by Peterson Algorithm over Prime Fields
 gcc -O3 fujiyama.c  
 ulimit -s unlimited  
 ./a.out  
 
 -------
+# 20231122
+符号を使ってinstance hidingを実現できないか調べている。
+日本語の本には詳しく説明がされている本が見当たらないので、論文を読む予定。（ゴールド来否の本にも載ってない）
+符号なら秘密鍵分散ができるので、意外と簡単にできるかもしれない。
+
+他にも何とかstrage modelとかいう物理的制限を前提にした安全性のモデルがあるので、それを使って安全な何かができないか考えている。
+暗号だけでは解決できないけど、こういう安全性の枠組みと組み合わせればできるかもしれない。
+サブリミナルチャンネルも使えるかもしれない。
+
 # 20231117
 vpowmodが原因で時間がかかっている。
 冪剰余演算さえ早くできれば、既にsagemathに匹敵する速度にはなっていると思う。
