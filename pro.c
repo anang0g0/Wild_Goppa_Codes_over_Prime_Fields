@@ -238,7 +238,7 @@ int main() {
     //matrix_inverse_simd(A,A_inv);
 
     // マルチプロセスで行列掛け算を並列化
-    int num_processes = 2;
+    int num_processes = 1;
     int rows_per_process = MATRIX_SIZE / num_processes;
 
     int shmid = shmget(SHM_KEY, sizeof(short) * MATRIX_SIZE * MATRIX_SIZE, IPC_CREAT | 0666);

@@ -36,7 +36,7 @@ void matrix_multiply(double A[MATRIX_SIZE][MATRIX_SIZE], double B[MATRIX_SIZE][M
     }
 }
 
-
+/*
 int matmul_simd(double matrixA[MATRIX_SIZE][MATRIX_SIZE],double matrixB[MATRIX_SIZE][MATRIX_SIZE],double *resultMatrix,int start_row,int end_row) {
     //double resultMatrix[MATRIX_SIZE][MATRIX_SIZE] = {0};
 
@@ -111,7 +111,7 @@ void matrix_inverse_simd(double A[MATRIX_SIZE][MATRIX_SIZE], double result[MATRI
         }
     }
 }
-
+*/
 
 
 // 行列の逆行列を計算する関数
