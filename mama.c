@@ -1130,7 +1130,7 @@ aa:
         goto aa;
     printsage((w));
     printf("\n");
-    exit(1);
+    //exit(1);
     //     printf("wwwwwww\n");
     //  exit(1);
     //  separable gvecpa code
@@ -1144,7 +1144,7 @@ aa:
     // exit(1);
 
     // 多項式の値が0でないことを確認
-    for (int i = start; i < end; i++)
+    for (int i = start; i < M; i++)
     {
         ta[i] = trace(w, i);
         if (ta[i] == 0)
@@ -1155,7 +1155,7 @@ aa:
             goto aa;
         }
     }
-    for (int i = start; i < end; i++)
+    for (int i = start; i < M; i++)
     {
         tr[i] = inv(ta[i], N);
         // printf("%d,", tr[i]);
@@ -1183,7 +1183,7 @@ aa:
     // keygen(g);
     // exit(1);
 
-    for (int j = start; j < end; j++)
+    for (int j = start; j < K; j++)
     {
         for (int i = 0; i < M; i++)
         {
@@ -1191,7 +1191,7 @@ aa:
         }
     }
 
-    for (int i = start; i < end; i++)
+    for (int i = start; i < K; i++)
     {
         for (int j = 0; j < M; j++)
         {
@@ -1199,7 +1199,7 @@ aa:
             {
                 mat[j][i] = (mat[j][i] + (gt[k][i] * ma[j][k])) % N;
             }
-            printf("c%d,", mat[j][i]);
+            printf("c%d,", ma[j][i]);
         }
         printf("\n");
     }
