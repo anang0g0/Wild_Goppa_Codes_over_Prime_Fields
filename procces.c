@@ -225,8 +225,8 @@ int main() {
             int end_row = (i + 1) * rows_per_process;
 
             inverseMatrix(A,A_inv,start_row,end_row);
-            matmul_simd(AA,A_inv,shared_C,start_row,end_row);
-            //matrix_multiply(AA, A_inv, shared_C, start_row, end_row);
+            //matmul_simd(AA,A_inv,shared_C,start_row,end_row);
+            matrix_multiply(AA, A_inv, shared_C, start_row, end_row);
 
             // 結果を表示
             printf("Process %d: Rows %d to %d completed\n", i, start_row, end_row);

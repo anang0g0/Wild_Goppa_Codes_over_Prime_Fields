@@ -160,7 +160,7 @@ void inverseMatrix(short A[MATRIX_SIZE][MATRIX_SIZE], short A_inv[MATRIX_SIZE][M
             A[k][j]%=N;
             A_inv[k][j]%=N;
         }
-        for (i = start_row; i < end_row; i++) {
+        for (i = 0; i < MATRIX_SIZE; i++) {
             if (i != k) {
                 temp = A[i][k];
                 for (j = 0; j < MATRIX_SIZE; j++) {
@@ -234,8 +234,9 @@ int main() {
     }
     
     
-    //inverseMatrix2(A,A_inv);
+    //
     //matrix_inverse_simd(A,A_inv);
+    //inverseMatrix2(A,A_inv);
 
     // マルチプロセスで行列掛け算を並列化
     int num_processes = 1;
