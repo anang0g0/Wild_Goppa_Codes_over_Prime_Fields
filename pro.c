@@ -8,37 +8,62 @@
 #include <math.h>
 #include <x86intrin.h> // SIMD命令を使用するためのヘッダファイル
 
-#define MATRIX_SIZE 8
+#define MATRIX_SIZE 16
 #define SHM_KEY 1234
+#define N 17
+
+
+typedef struct {
+    short x[N][N];
+  int row; //行
+  int col; //列
+} MTX;
 
 
 // 行列を表示する関数
-void print_matrix(double A[MATRIX_SIZE][MATRIX_SIZE]) {
+void print_matrix(short A[MATRIX_SIZE][MATRIX_SIZE]) {
     for (int i = 0; i < MATRIX_SIZE; i++) {
         for (int j = 0; j < MATRIX_SIZE; j++) {
-            printf("%lf ", A[i][j]);
+            printf("%d ", A[i][j]);
         }
         printf("\n");
     }
 }
 
+unsigned short oinv(unsigned short a, unsigned short n)
+{
+    unsigned short i;
+
+    if (a == 0)
+        return 0;
+    // if (a == 1)
+    //     return 1;
+    for (i = 1; i < n; i++)
+    {
+        if ((i * a) % N == 1)
+            return i;
+    }
+    printf("no return\n");
+    exit(1);
+}
+
 
 // 行列の掛け算関数
-void matrix_multiply(double A[MATRIX_SIZE][MATRIX_SIZE], double B[MATRIX_SIZE][MATRIX_SIZE], double *C, int start_row, int end_row) {
+void matrix_multiply(short A[MATRIX_SIZE][MATRIX_SIZE], short B[MATRIX_SIZE][MATRIX_SIZE], short *C, int start_row, int end_row) {
     for (int i = start_row; i < end_row; i++) {
         for (int j = 0; j < MATRIX_SIZE; j++) {
-            double sum = 0.0;
+            int sum = 0;
             for (int k = 0; k < MATRIX_SIZE; k++) {
-                sum += A[i][k] * B[k][j];
+                sum += A[i][k] * B[k][j]%N;
             }
-            C[i*MATRIX_SIZE+j] = sum;
+            C[i*MATRIX_SIZE+j] = sum%N;
         }
     }
 }
 
-
-int matmul_simd(double matrixA[MATRIX_SIZE][MATRIX_SIZE],double matrixB[MATRIX_SIZE][MATRIX_SIZE],double *resultMatrix,int start_row,int end_row) {
-    //double resultMatrix[MATRIX_SIZE][MATRIX_SIZE] = {0};
+/*
+int matmul_simd(short matrixA[MATRIX_SIZE][MATRIX_SIZE],short matrixB[MATRIX_SIZE][MATRIX_SIZE],short *resultMatrix,int start_row,int end_row) {
+    //short resultMatrix[MATRIX_SIZE][MATRIX_SIZE] = {0};
 
     for (int i = start_row; i < end_row; i++) {
         for (int j = 0; j < MATRIX_SIZE; j++) {
@@ -58,8 +83,8 @@ int matmul_simd(double matrixA[MATRIX_SIZE][MATRIX_SIZE],double matrixB[MATRIX_S
 }
 
 
-void matrix_inverse_simd(double A[MATRIX_SIZE][MATRIX_SIZE], double result[MATRIX_SIZE][MATRIX_SIZE]) {
-    double pivot[MATRIX_SIZE];
+void matrix_inverse_simd(short A[MATRIX_SIZE][MATRIX_SIZE], short result[MATRIX_SIZE][MATRIX_SIZE]) {
+    short pivot[MATRIX_SIZE];
     for (int i = 0; i < MATRIX_SIZE; i++) {
         pivot[i] = -1.0;
     }
@@ -69,12 +94,12 @@ void matrix_inverse_simd(double A[MATRIX_SIZE][MATRIX_SIZE], double result[MATRI
 
     for (int col = 0; col < MATRIX_SIZE; col++) {
         int pivot_row = -1;
-        double max_value = 0.0;
+        short max_value = 0.0;
 
         for (int row = 0; row < MATRIX_SIZE; row++) {
             if (pivot[row] != -1.0) continue;
 
-            double val = fabs(A[row][col]);
+            short val = fabs(A[row][col]);
             if (val > max_value) {
                 max_value = val;
                 pivot_row = row;
@@ -89,7 +114,7 @@ void matrix_inverse_simd(double A[MATRIX_SIZE][MATRIX_SIZE], double result[MATRI
         pivot[pivot_row] = col;
 
         // Scale the pivot row
-        double pivot_value = A[pivot_row][col];
+        short pivot_value = A[pivot_row][col];
         for (int j = 0; j < MATRIX_SIZE; j++) {
             A[pivot_row][j] /= pivot_value;
             result[pivot_row][j] = A[pivot_row][j];
@@ -111,13 +136,13 @@ void matrix_inverse_simd(double A[MATRIX_SIZE][MATRIX_SIZE], double result[MATRI
         }
     }
 }
-
+*/
 
 
 // 行列の逆行列を計算する関数
-void inverseMatrix(double A[MATRIX_SIZE][MATRIX_SIZE], double A_inv[MATRIX_SIZE][MATRIX_SIZE],int start_row,int end_row) {
+void inverseMatrix(short A[MATRIX_SIZE][MATRIX_SIZE], short A_inv[MATRIX_SIZE][MATRIX_SIZE],int start_row,int end_row) {
     int i, j, k;
-    double temp;
+    short temp;
 
     // 単位行列を初期化
     for (i = start_row; i < end_row; i++) {
@@ -130,15 +155,21 @@ void inverseMatrix(double A[MATRIX_SIZE][MATRIX_SIZE], double A_inv[MATRIX_SIZE]
     for (k = start_row; k < end_row; k++) {
         temp = A[k][k];
         for (j = 0; j < MATRIX_SIZE; j++) {
-            A[k][j] /= temp;
-            A_inv[k][j] /= temp;
+            A[k][j] *= oinv(temp,N);
+            A_inv[k][j] *= oinv(temp,N);
+            A[k][j]%=N;
+            A_inv[k][j]%=N;
         }
         for (i = start_row; i < end_row; i++) {
             if (i != k) {
                 temp = A[i][k];
                 for (j = 0; j < MATRIX_SIZE; j++) {
-                    A[i][j] -= A[k][j] * temp;
-                    A_inv[i][j] -= A_inv[k][j] * temp;
+                    A[i][j] -= A[k][j] * temp%N;
+                    A_inv[i][j] -= A_inv[k][j] * temp%N;
+                    if(A[i][j]<0)
+                    A[i][j]=N+A[i][j]%N;
+                    if(A_inv[i][j]<0)
+                    A_inv[i][j]=N+A_inv[i][j]%N;
                 }
             }
         }
@@ -146,14 +177,14 @@ void inverseMatrix(double A[MATRIX_SIZE][MATRIX_SIZE], double A_inv[MATRIX_SIZE]
 }
 
 // 行列の逆行列を計算する関数
-void inverseMatrix2(double A[MATRIX_SIZE][MATRIX_SIZE], double A_inv[MATRIX_SIZE][MATRIX_SIZE]) {
+void inverseMatrix2(short A[MATRIX_SIZE][MATRIX_SIZE], short A_inv[MATRIX_SIZE][MATRIX_SIZE]) {
     int i, j, k;
-    double temp;
+    short temp;
 
     // 単位行列を初期化
     for (i = 0; i < MATRIX_SIZE; i++) {
         for (j = 0; j < MATRIX_SIZE; j++) {
-            A_inv[i][j] = (i == j) ? 1.0 : 0.0;
+            A_inv[i][j] = (i == j) ? 1 : 0;
         }
     }
 
@@ -170,6 +201,11 @@ void inverseMatrix2(double A[MATRIX_SIZE][MATRIX_SIZE], double A_inv[MATRIX_SIZE
                 for (j = 0; j < MATRIX_SIZE; j++) {
                     A[i][j] -= A[k][j] * temp;
                     A_inv[i][j] -= A_inv[k][j] * temp;
+                    if(A[i][j]<0)
+                    A[i][j]=N+A[i][j]%N;
+                    if(A_inv[i][j]<0)
+                    A_inv[i][j]=N+A_inv[i][j]%N;
+
                 }
             }
         }
@@ -180,16 +216,17 @@ void inverseMatrix2(double A[MATRIX_SIZE][MATRIX_SIZE], double A_inv[MATRIX_SIZE
 
 
 int main() {
-    double A[MATRIX_SIZE][MATRIX_SIZE];
-    double A_inv[MATRIX_SIZE][MATRIX_SIZE];
-    double C[MATRIX_SIZE][MATRIX_SIZE];
-    double AA[MATRIX_SIZE][MATRIX_SIZE];
+    short A[MATRIX_SIZE][MATRIX_SIZE];
+    short A_inv[MATRIX_SIZE][MATRIX_SIZE];
+    short C[MATRIX_SIZE][MATRIX_SIZE];
+    short AA[MATRIX_SIZE][MATRIX_SIZE];
 
+    srand(clock());
     // 行列 A を初期化
     for (int i = 0; i < MATRIX_SIZE; i++) {
         for (int j = 0; j < MATRIX_SIZE; j++) {
-            A[i][j] = 1.0 + rand() % 7;
-            //printf("%lf,",A[i][j]);
+            A[i][j] = (1 + random()) % N;
+            //printf("%d,",A[i][j]);
             // 行列 A のコピーを作成
             AA[i][j]=A[i][j];
         }
@@ -201,17 +238,17 @@ int main() {
     //matrix_inverse_simd(A,A_inv);
 
     // マルチプロセスで行列掛け算を並列化
-    int num_processes = 8;
+    int num_processes = 2;
     int rows_per_process = MATRIX_SIZE / num_processes;
 
-    int shmid = shmget(SHM_KEY, sizeof(double) * MATRIX_SIZE * MATRIX_SIZE, IPC_CREAT | 0666);
+    int shmid = shmget(SHM_KEY, sizeof(short) * MATRIX_SIZE * MATRIX_SIZE, IPC_CREAT | 0666);
     if (shmid == -1) {
         perror("shmget");
         exit(1);
     }
 
-    double *shared_C = (double *)shmat(shmid, NULL, 0);
-    if (shared_C == (double *)-1) {
+    short *shared_C = (short *)shmat(shmid, NULL, 0);
+    if (shared_C == (short *)-1) {
         perror("shmat");
         exit(1);
     }
@@ -225,7 +262,8 @@ int main() {
             int end_row = (i + 1) * rows_per_process;
 
             inverseMatrix(A,A_inv,start_row,end_row);
-            matmul_simd(AA,A_inv,shared_C,start_row,end_row);
+            //print_matrix(A_inv);
+            matrix_multiply(AA,A_inv,shared_C,start_row,end_row);
             //matrix_multiply(AA, A_inv, shared_C, start_row, end_row);
 
             // 結果を表示
@@ -248,7 +286,7 @@ int main() {
     printf("Result Matrix:\n");
     for (int i = 0; i < MATRIX_SIZE; i++) {
         for (int j = 0; j < MATRIX_SIZE; j++) {
-            printf("%lf ", shared_C[i * MATRIX_SIZE + j]);
+            printf("%d ", shared_C[i * MATRIX_SIZE + j]);
         }
         printf("\n");
     }
