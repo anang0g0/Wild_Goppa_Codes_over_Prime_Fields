@@ -772,7 +772,7 @@ int resl(vec f, vec g)
     {
         y = (y * dia[i]) % N;
         if (dia[i] == 0)
-            return 0;
+            return -1;
     }
     printf("y=%d\n", y);
     // exit(1);
